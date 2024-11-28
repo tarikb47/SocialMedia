@@ -1,3 +1,35 @@
 <resources>
     <string name="app_name">Hook</string>
+    <string name="onboarding_title">What´s up</string>
+    <string name="onboarding_subtitle">Let´s talk with your friends and family\n wherever and whenever</string>
+    <string name="onboarding_button_text">Continue with phone</string>
+    <string name="image_description">Image</string>
+    <string name="register_title">Create an account</string>
+    <string name="register_subtitle">Connect with your friends today!</string>
+    <string name="placeholder_username">Enter Your Username</string>
+    <string name="placeholder_email">Enter Your Email</string>
+    <string name="placeholder_phone_number">Enter Your Phone Number</string>
+    <string name="placeholder_password">Enter Your Password</string>
+    <string name="button_continue">Continue</string>
+    <string name="button_sing_up">Sign Up</string>
+    <string name="button_login">Login</string>
+    <string name="register_login_divider_text">Or With</string>
+    <string name="login_title">Hi, Welcome Back!</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="placeholder_email_example">example@gmail.com</string>
+    <string name="remember_me_check">Remember Me</string>
+    <string name="facebook_login">Login with Facebook</string>
+    <string name="google_login">Login with Google</string>
+    <string name="facebook_singup">Signup with Facebook</string>
+    <string name="google_signup">Signup with Google</string>
+    <string name="dont_have_acc">Don´t have an account ?</string>
+    <string name="already_hace_acc">Already have an account ?</string>
+    <string name="forget_pass">Forgot Password?</string>
+    <string name="verification_title">Enter Code</string>
+    <string name="verification_subtitle">We have sent the verification code via SMS\n to your phone number</string>
+    <string name="verifcation_didnt_get_the_code">Didn´t get the code?</string>
+    <string name="resend">Resend code</string>
+    <string name="facebook_app_id">1249653749449646</string>
+
 </resources>

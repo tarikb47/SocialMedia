@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="EditTextStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/space_xs</item>
+        <item name="android:background">@drawable/rounded_edit_text_background</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">@dimen/space_s</item>
+        <item name="android:layout_marginStart">@dimen/space_xxl</item>
+        <item name="android:layout_marginEnd">@dimen/space_xxl</item>
+        <item name="android:layout_marginTop">@dimen/space_xxl</item>
+    </style>
+
+    <style name="RegularButtonStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/btn_height_l</item>
+        <item name="backgroundTint">@color/button_background</item>
+        <item name="android:background">@drawable/rounded_edit_text_background</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:layout_marginStart">@dimen/space_xxl</item>
+        <item name="android:layout_marginEnd">@dimen/space_xxl</item>
+        <item name="android:drawablePadding">8dp</item>
+    </style>
+
+    <style name="FacebookButtonStyle" parent="RegularButtonStyle">
+        <item name="iconTint">@null</item>
+        <item name="android:background">@null</item>
+        <item name="android:backgroundTint">@color/fb_color</item>
+    </style>
+
+    <style name="GoogleButtonStyle" parent="RegularButtonStyle">
+        <item name="iconTint">@null</item>
+        <item name="android:background">@null</item>
+        <item name="android:backgroundTint">@color/white</item>
+    </style>
+
+    <style name="rounded_code_style">
+        <item name="android:layout_width">42dp</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:background">@drawable/rounded_edittext_background</item>
+        <item name="android:inputType">number</item>
+        <item name="android:maxLength">1</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+</resources>

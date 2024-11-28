@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dimen_four">4dp</dimen>
+    <dimen name="dimen_eight">8dp</dimen>
+    <dimen name="dimen_sixteen">16dp</dimen>
+    <dimen name="dimen_32">32dp</dimen>
+    <dimen name="dimen_64">64dp</dimen>
+    <dimen name="dimen_128">128dp</dimen>
+    <dimen name="dimen_52">52dp</dimen>
+    <dimen name="dimen_72">72dp</dimen>
+    <dimen name="dimen_81">81dp</dimen>
+    <dimen name="btn_large">62dp</dimen>
+    <dimen name="space_6xl">136dp</dimen>
+
+
+    <dimen name="space_xxxxs">2dp</dimen>
+    <dimen name="space_xxxs">4dp</dimen>
+    <dimen name="space_xxs">8dp</dimen>
+    <dimen name="space_xs">12dp</dimen>
+    <dimen name="space_s">16dp</dimen>
+    <dimen name="space_m">20dp</dimen>
+    <dimen name="space_l">24dp</dimen>
+    <dimen name="space_xl">28dp</dimen>
+    <dimen name="space_xxl">32dp</dimen>
+    <dimen name="space_xxxl">36dp</dimen>
+    <dimen name="space_4xl">46dp</dimen>
+    <dimen name="space_5xl">56dp</dimen>
+    <!--endregion-->
+    <!--region Button sizes-->
+    <dimen name="btn_height_l">56dp</dimen>
+    <dimen name="btn_height_m">48dp</dimen>
+    <dimen name="btn_height_s">40dp</dimen>
+    <dimen name="btn_height_xs">32dp</dimen>
+    <!--endregion-->
+    <!--region ImageView sizes-->
+    <dimen name="image_xxxxs">8dp</dimen>
+    <dimen name="image_xxxs">16dp</dimen>
+    <dimen name="image_xxs">24dp</dimen>
+    <dimen name="image_xs">32dp</dimen>
+    <dimen name="image_s">40dp</dimen>
+    <dimen name="image_m">48dp</dimen>
+    <dimen name="image_l">56dp</dimen>
+    <dimen name="image_xl">64dp</dimen>
+    <dimen name="image_xxl">72dp</dimen>
+    <dimen name="image_xxxl">80dp</dimen>
+    <dimen name="image_6xl">120dp</dimen>
+    <!--endregion-->
+    <!--region Text sizes-->
+    <dimen name="text_size_h1">32dp</dimen>
+    <dimen name="text_size_h2">24dp</dimen>
+    <dimen name="text_size_h3">20dp</dimen>
+    <dimen name="text_size_h4">18dp</dimen>
+    <dimen name="text_size_h5">16dp</dimen>
+    <dimen name="text_size_body_1">16dp</dimen>
+    <dimen name="text_size_body_2">14dp</dimen>
+    <dimen name="text_size_body_3">12dp</dimen>
+    <dimen name="text_size_body_4">10dp</dimen>
+    <dimen name="text_size_body_5">8dp</dimen>
+    <!--endregion-->
+
+</resources>

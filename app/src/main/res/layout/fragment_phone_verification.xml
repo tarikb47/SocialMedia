@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgound_fragments_general"
+    >
+
+    <TextView
+        android:id="@+id/verification_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_6xl"
+        android:text="@string/verification_title"
+        android:textSize="@dimen/text_size_h2"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/verification_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_m"
+        android:text="@string/verification_subtitle"
+        android:textAlignment="center"
+        android:textColor="@color/general_subtitle"
+        android:textSize="@dimen/text_size_h4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/verification_title" />
+
+    <EditText
+        android:id="@+id/digit_one"
+        style="@style/rounded_code_style"
+        android:layout_marginTop="@dimen/space_4xl"
+        app:layout_constraintEnd_toStartOf="@id/digit_two"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/verification_subtitle"
+        app:layout_constraintHorizontal_chainStyle="spread" />
+
+    <EditText
+        style="@style/rounded_code_style"
+        android:id="@+id/digit_two"
+        app:layout_constraintEnd_toStartOf="@id/digit_three"
+        app:layout_constraintStart_toEndOf="@id/digit_one"
+        app:layout_constraintTop_toTopOf="@id/digit_one" />
+
+    <EditText
+        style="@style/rounded_code_style"
+        android:id="@+id/digit_three"
+        app:layout_constraintEnd_toStartOf="@id/digit_four"
+        app:layout_constraintStart_toEndOf="@id/digit_two"
+        app:layout_constraintTop_toTopOf="@id/digit_one" />
+
+    <EditText
+        android:id="@+id/digit_four"
+        style="@style/rounded_code_style"
+        app:layout_constraintEnd_toStartOf="@id/digit_five"
+        app:layout_constraintStart_toEndOf="@id/digit_three"
+        app:layout_constraintTop_toTopOf="@id/digit_one" />
+
+    <EditText
+        android:id="@+id/digit_five"
+       style="@style/rounded_code_style"
+        app:layout_constraintEnd_toStartOf="@id/digit_six"
+        app:layout_constraintStart_toEndOf="@id/digit_four"
+        app:layout_constraintTop_toTopOf="@id/digit_one" />
+
+    <EditText
+        android:id="@+id/digit_six"
+        style="@style/rounded_code_style"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/digit_five"
+        app:layout_constraintTop_toTopOf="@id/digit_one" />
+    <TextView
+        app:layout_constraintHorizontal_chainStyle="packed"
+        android:id="@+id/verification_code_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/verifcation_didnt_get_the_code"
+        android:textColor="@color/general_subtitle"
+        android:layout_marginBottom="@dimen/space_xxl"
+        app:layout_constraintEnd_toStartOf="@id/resend_code"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+       />
+
+    <TextView
+        android:id="@+id/resend_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/resend"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/space_s"
+        app:layout_constraintTop_toTopOf="@id/verification_code_question"
+        app:layout_constraintStart_toEndOf="@id/verification_code_question"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

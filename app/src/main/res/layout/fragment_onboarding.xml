@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/backgound_fragments_general"
+        tools:context=".presentation.onboarding.OnboardingFragment">
+
+        <TextView
+            android:id="@+id/onboarding_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_6xl"
+            android:text="@string/onboarding_title"
+            android:textColor="@color/black"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/onboarding_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/dimen_64"
+            android:contentDescription="@string/image_description"
+            android:src="@drawable/illustration_1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/onboarding_title" />
+
+        <TextView
+            android:id="@+id/onboarding_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dimen_64"
+            android:text="@string/onboarding_subtitle"
+            android:textAlignment="center"
+            android:textColor="@color/onboarding_subtitle"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="@id/onboarding_image"
+            app:layout_constraintStart_toStartOf="@id/onboarding_image"
+            app:layout_constraintTop_toBottomOf="@id/onboarding_image" />
+
+        <Button
+            android:id="@+id/onboarding_button_login"
+            style="@style/RegularButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_marginEnd="@dimen/space_s"
+            android:text="@string/button_login"
+            android:layout_marginTop="@dimen/space_m"
+            android:layout_marginBottom="@dimen/space_l"
+            app:layout_constraintTop_toBottomOf="@id/onboarding_subtitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/onboarding_button_register"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/onboarding_button_register"
+            style="@style/RegularButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_marginStart="@dimen/space_s"
+            android:text="@string/button_sing_up"
+            app:layout_constraintTop_toTopOf="@id/onboarding_button_login"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/onboarding_button_login" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
