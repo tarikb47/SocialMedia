@@ -31,5 +31,10 @@
     <string name="verifcation_didnt_get_the_code">Didn´t get the code?</string>
     <string name="resend">Resend code</string>
     <string name="facebook_app_id">1249653749449646</string>
+    <string name="submit_code">Submit code</string>
+    <string name="chats">Chats</string>
+    <string name="contacts">Contacts</string>
+    <string name="settings">Settings</string>
+
 
 </resources>

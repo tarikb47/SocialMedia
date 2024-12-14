@@ -10,4 +10,6 @@
     <color name = "fb_color">#1877F2</color>
     <color name="red">#E86969</color>
     <color name="rounded_edit_text_color_grey">#CBCBCB</color>
+    <color name="splash_bacground">#6fb298</color>
+    <color name= "green">#4CAF50</color>
 </resources>

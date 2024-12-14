@@ -84,6 +84,8 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("com.google.android.gms:play-services-identity:18.1.0")
+    implementation (libs.timber)
+
 
 
 }

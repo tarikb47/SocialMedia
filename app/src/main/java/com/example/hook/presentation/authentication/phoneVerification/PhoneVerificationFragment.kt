@@ -5,68 +5,45 @@ import androidx.fragment.app.viewModels
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.view.Gravity
 import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.hook.R
-import com.example.hook.databinding.CustomToastBinding
 import com.example.hook.databinding.FragmentPhoneVerificationBinding
-import com.example.hook.domain.model.User
+import com.example.hook.presentation.authentication.helpers.ToastHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class PhoneVerification : Fragment() {
+    private val args: PhoneVerificationArgs by navArgs()
     private var _binding: FragmentPhoneVerificationBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PhoneVerificationViewModel by viewModels()
     private var verificationId: String? = null
 
-    /*
-        private var user: User? = null
-    */
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPhoneVerificationBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        sendVerificationCode()
         binding.digitOne.requestFocus()
+
         val imm =
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(binding.digitOne, InputMethodManager.SHOW_IMPLICIT)
-
         setupCodeInputBehavior()
-        viewModel.getUserFromLocal(1)
-        lifecycleScope.launchWhenStarted {
-            viewModel.userLocalFetchStateFlow.collect { state ->
-                when (state) {
-                    is UserLocalState.Idle -> {}
-                    is UserLocalState.Loading -> {}
-                    is UserLocalState.Success -> {
-                        sendVerificationCode(state.user.phoneNumber)
-                    }
-
-                    is UserLocalState.Error -> {
-                        Log.d("Tarik", "onCreateView: Nece da fetcha sa lokalne")
-                    }
-                }
-
-            }
-        }
-
-        /*
-        user = arguments?.let { PhoneVerificationArgs.fromBundle(it).user }
-        user?.let { sendVerificationCode(it.phoneNumber) }*/
-        return binding.root
     }
 
     override fun onDestroyView() {
@@ -118,70 +95,92 @@ class PhoneVerification : Fragment() {
         }
     }
 
-    private fun sendVerificationCode(phonenumber: String) {
-        val phoneNumber = "+38761068883"
+    private fun sendVerificationCode() {
+        val email = args.email
+        val username = args.username
+        val phoneNumber = args.phoneNumber
+        val password = args.password
+        viewModel.sendVerificationCode(phoneNumber)
         lifecycleScope.launch {
-            viewModel.sendVerificationCode(phonenumber)
-            val user = viewModel.getFetchedUser()
             viewModel.verificationState.collect { state ->
                 when (state) {
-                    is VerificationState.Loading -> {
+                    is VerificationState.Loading -> binding.progressBar.visibility = View.VISIBLE
+                    is VerificationState.CodeSent -> verificationId = state.verificationId
+                    VerificationState.CompletedVerification -> {}
+                    VerificationState.SignedInWithPhoneNumber -> {
+                        viewModel.registerUser(username, email, phoneNumber, password)
                     }
 
-                    is VerificationState.CodeSent -> {
-                        verificationId = state.verificationId
-                    }
-
-                    is VerificationState.Completed -> {
-                        viewModel.registerUser(user!!)
+                    VerificationState.Idle -> {}
+                    VerificationState.UserRegistered -> {
+                        showSuccessMessage("Registered successfully, proceed with login.")
                         navigateToNextScreen()
-                        showSuccess()
                     }
 
                     is VerificationState.Error -> {
-                        showError(state.message)
+                        binding.progressBar.visibility = View.GONE
+                        handleError(state.error)
+                        setCodeInputEnabled(true)
                     }
-
-                    else -> showError("unresolved")
                 }
             }
         }
     }
 
     private fun submitVerificationCode() {
-        val enteredCode = binding.digitOne.text.toString() +
-                binding.digitTwo.text.toString() +
-                binding.digitThree.text.toString() +
-                binding.digitFour.text.toString() +
-                binding.digitFive.text.toString() +
-                binding.digitSix.text.toString()
-        val user = viewModel.getFetchedUser()
-        if (enteredCode.length == 6 && verificationId != null) {
-            viewModel.verifyCode(verificationId!!, enteredCode, user!!)
+        val enteredCode =
+            binding.digitOne.text.toString() + binding.digitTwo.text.toString() + binding.digitThree.text.toString() + binding.digitFour.text.toString() + binding.digitFive.text.toString() + binding.digitSix.text.toString()
 
+        if (enteredCode.length == 6) {
+            setCodeInputEnabled(false)
+            binding.progressBar.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                waitForVerificationIdAndSubmit(enteredCode)
+            }
+        }
+    }
+
+    private suspend fun waitForVerificationIdAndSubmit(enteredCode: String) {
+        val timeoutMillis = 10_000
+        val startTime = System.currentTimeMillis()
+        while (verificationId == null && (System.currentTimeMillis() - startTime) < timeoutMillis) {
+            kotlinx.coroutines.delay(100)
+        }
+        if (verificationId != null) {
+            viewModel.phoneSignUWithCode(verificationId!!, enteredCode)
+        } else {
+            binding.progressBar.visibility = View.GONE
+            handleError(Throwable("Verification ID not received in time. Please try again."))
+            setCodeInputEnabled(true)
         }
     }
 
     private fun navigateToNextScreen() {
-        findNavController().navigate(R.id.verificationFragment_to_homeFragment)
+        findNavController().navigate(R.id.verificationFragment_to_loginFragment)
     }
 
-    private fun showSuccess() {
-        showToast("Registrovan.")
+    private fun handleError(error: Throwable) {
+        ToastHelper.showError(
+            requireContext(), error.message ?: "An error occurred", layoutInflater
+        )
     }
 
-    private fun showError(message: String) {
-        showToast("failalo")
+    private fun showSuccessMessage(message: String) {
+        ToastHelper.showSuccess(requireContext(), message, layoutInflater)
     }
 
-    private fun showToast(message: String) {
-        val toastBinding = CustomToastBinding.inflate(layoutInflater)
-        toastBinding.toastMessage.text = message
-        Toast(requireContext()).apply {
-            duration = Toast.LENGTH_LONG
-            view = toastBinding.root
-            setGravity(Gravity.TOP, 0, 100)
-            show()
+    private fun setCodeInputEnabled(enabled: Boolean) {
+        val codeInputs = listOf(
+            binding.digitOne,
+            binding.digitTwo,
+            binding.digitThree,
+            binding.digitFour,
+            binding.digitFive,
+            binding.digitSix
+        )
+        codeInputs.forEach { it.isEnabled = enabled }
+        if (!enabled) {
+            binding.digitOne.clearFocus()
         }
     }
 }

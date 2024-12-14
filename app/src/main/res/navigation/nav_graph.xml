@@ -3,10 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/onboardingFragment">
+    app:startDestination="@id/splashFragment">
 
-    <action android:id="@+id/toLogin" app:destination="@id/loginFragment" />
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.hook.presentation.splash.SplashFragment"
+        android:label="fragment_splash"
+        tools:layout="@layout/fragment_splash">
+        <action
+            android:id="@+id/action_splash_to_onboarding"
+            app:destination="@id/onboardingFragment"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/slide_out"
+            app:popEnterAnim="@anim/slide_in"
+            app:popExitAnim="@anim/slide_out" />
 
+    </fragment>
     <fragment
         android:id="@+id/onboardingFragment"
         android:name="com.example.hook.presentation.onboarding.OnboardingFragment"
@@ -55,19 +67,26 @@
         android:id="@+id/phoneVerificationFragment"
         android:name="com.example.hook.presentation.authentication.phoneVerification.PhoneVerification"
         android:label="Phone Verification">
-     <!--   <argument
-            android:name="user"
-            app:argType="com.example.hook.domain.model.User" />-->
+        <argument
+            android:name="username"
+            app:argType="string" />
+        <argument
+            android:name="email"
+            app:argType="string" />
+        <argument
+            android:name="phoneNumber"
+            app:argType="string" />
+        <argument
+            android:name="password"
+            app:argType="string" />
         <action
-            android:id="@+id/verificationFragment_to_homeFragment"
-            app:destination="@id/homeFragment"
-            />
+            android:id="@+id/verificationFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
     </fragment>
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.hook.presentation.home.HomeFragment"
-        android:label="Home"
-        />
+        android:label="Home" />
 
 
 </navigation>

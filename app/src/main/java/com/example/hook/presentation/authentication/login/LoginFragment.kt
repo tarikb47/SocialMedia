@@ -1,21 +1,27 @@
 package com.example.hook.presentation.authentication.login
 
+import android.content.Intent
 import androidx.fragment.app.viewModels
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.hook.R
-import com.example.hook.databinding.CustomToastBinding
+import com.example.hook.common.exception.BlankFieldsException
+import com.example.hook.common.exception.FacebookLoginCancelledException
+import com.example.hook.common.exception.FacebookSignInFailedException
 import com.example.hook.databinding.FragmentLoginBinding
+import com.example.hook.presentation.authentication.helpers.ToastHelper
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -23,26 +29,29 @@ class LoginFragment : Fragment() {
     private val viewModel: LoginViewModel by viewModels()
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private lateinit var callbackManager: CallbackManager
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        callbackManager = CallbackManager.Factory.create()
         setupObservers()
         setupListeners()
-        return binding.root
-
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
 
     private fun setupListeners() {
         binding.goToSignUp.setOnClickListener {
@@ -55,7 +64,26 @@ class LoginFragment : Fragment() {
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 viewModel.login(email, password)
             } else {
-                showError("Please enter valid email and password")
+                handleError(BlankFieldsException())
+            }
+        }
+        binding.fbButton.setOnClickListener { initiateFacebookLogin() }
+        binding.googleButton.setOnClickListener { initiateGoogleLogin() }
+        binding.forgotPass.setOnClickListener {
+            val email = binding.loginEmailEditText.text.toString().trim()
+            viewModel.resetPassword(email)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            GOOGLE_SIGN_IN_REQUEST_CODE -> {
+                viewModel.handleGoogleSignIn(data)
+            }
+
+            else -> {
+                callbackManager.onActivityResult(requestCode, resultCode, data)
             }
         }
     }
@@ -65,49 +93,84 @@ class LoginFragment : Fragment() {
             viewModel.loginState.collect { state ->
                 when (state) {
                     is LoginState.Loading -> {
-                        Log.d("Tarik", "setupObservers: Loading faza")
                     }
 
                     is LoginState.Success -> {
-                        showSuccess("Login successfully")
+                        showSuccessMessage("Login successfully")
                         findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
                     }
 
                     is LoginState.Error -> {
-                        showError(state.message)
+                        handleError(state.message)
                     }
 
                     is LoginState.Idle -> {
                     }
+
+                    is LoginState.EmailSent -> showSuccessMessage("Reset password email sent.")
+                    is LoginState.FacebookSignIn -> {
+                        showSuccessMessage("Login successfully")
+                        findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
+                    }
+
+                    is LoginState.Initial -> {}
+                    is LoginState.GoogleSignIn -> {
+                        showSuccessMessage("Login successfully")
+                        findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
+                    }
                 }
             }
+
         }
+        LoginManager.getInstance().registerCallback(callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    viewModel.handleFacebookAccessToken(result.accessToken)
+                }
+
+                override fun onCancel() {
+                    handleError(FacebookLoginCancelledException())
+                }
+
+                override fun onError(error: FacebookException) {
+                    handleError(FacebookSignInFailedException())
+                }
+            }
+        )
     }
 
-    private var isToastVisible = false
-    private fun showToast(message: String) {
-        if (isToastVisible) return
-        isToastVisible = true
-        val toastBinding = CustomToastBinding.inflate(layoutInflater)
-        toastBinding.toastMessage.text = message
-        Toast(requireContext()).apply {
-            duration = Toast.LENGTH_LONG
-            view = toastBinding.root
-            setGravity(Gravity.TOP, 0, 100)
-            show()
-        }
-        Handler(Looper.getMainLooper()).postDelayed({
-            isToastVisible = false
-        }, 3500)
+    private fun handleError(error: Throwable) {
+        ToastHelper.showError(
+            requireContext(),
+            error.message ?: "An error occurred",
+            layoutInflater
+        )
     }
 
-    private fun showError(message: String) {
-        showToast(message)
+    private fun showSuccessMessage(message: String) {
+        ToastHelper.showSuccess(requireContext(), message, layoutInflater)
     }
 
-    private fun showSuccess(message: String) {
-        showToast(message)
+
+    private fun initiateFacebookLogin() {
+        LoginManager.getInstance().logInWithReadPermissions(
+            this,
+            listOf(LIST_OF_EMAIL, "public_profile")
+        )
     }
 
+    private fun initiateGoogleLogin() {
+        googleSignInClient = viewModel.getGoogleSignInClient()
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(
+            signInIntent,
+            GOOGLE_SIGN_IN_REQUEST_CODE
+        )
+    }
+
+    companion object {
+        private const val GOOGLE_SIGN_IN_REQUEST_CODE = 1001
+        private const val LIST_OF_EMAIL = "email"
+    }
 }
 

@@ -6,8 +6,8 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class User(
-    val username: String,
-    val email: String,
-    val phoneNumber: String,
-    val password: String
+    val username: String?,
+    val email: String?,
+    val phoneNumber: String?,
+    val firebaseToken : String?
 ) : Parcelable

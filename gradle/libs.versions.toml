@@ -18,6 +18,7 @@ firebaseAuth = "23.1.0"
 legacySupportV4 = "1.0.0"
 firebaseFirestore = "25.1.1"
 fragmentKtx = "1.8.5"
+timber = "5.0.0"
 
 
 
@@ -42,6 +43,7 @@ androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

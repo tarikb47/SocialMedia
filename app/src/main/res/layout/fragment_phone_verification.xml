@@ -7,7 +7,15 @@
     android:layout_height="match_parent"
     android:background="@color/backgound_fragments_general"
     >
-
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/digit_one"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="@dimen/space_l"/>
     <TextView
         android:id="@+id/verification_title"
         android:layout_width="wrap_content"

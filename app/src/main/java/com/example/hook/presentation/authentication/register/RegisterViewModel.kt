@@ -1,92 +1,142 @@
 package com.example.hook.presentation.authentication.register
 
 import android.content.Intent
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hook.domain.model.User
-import com.example.hook.domain.repository.UserRepository
-import com.example.hook.domain.usecase.FacebookLoginUseCase
-import com.example.hook.domain.usecase.GoogleLoginUseCase
-import com.example.hook.domain.usecase.RegisterUseCase
-import com.example.hook.domain.usecase.ValidateInputFields
-import com.example.hook.presentation.authentication.phoneVerification.RegisterState
+import com.example.hook.common.exception.FacebookSignInFailedException
+import com.example.hook.common.exception.FailedToSaveUserException
+import com.example.hook.common.exception.GoogleSignInFailedException
 import com.facebook.AccessToken
-import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.firebase.auth.AuthCredential
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.hook.common.result.Result
+import com.example.hook.domain.model.User
+import com.example.hook.domain.repository.UserRepository
+import com.example.hook.domain.usecases.remotedatabaseusecases.GetFirebaseUserUseCase
+import com.example.hook.domain.usecases.remotedatabaseusecases.SaveUserToFirebaseUseCase
+import com.example.hook.domain.usecases.remotedatabaseusecases.SignInWithFacebookUseCase
+import com.example.hook.domain.usecases.remotedatabaseusecases.SignInWithGoogleUseCase
+import com.example.hook.presentation.authentication.helpers.InputFieldValidator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val validateInputFields: ValidateInputFields,
-    private val facebookLoginUseCase: FacebookLoginUseCase,
+    private val inputFieldValidator: InputFieldValidator,
+    private val googleSignInUseCase: SignInWithGoogleUseCase,
+    private val facebookSignInUseCase: SignInWithFacebookUseCase,
+    private val saveUserToFirebaseUseCase: SaveUserToFirebaseUseCase,
+    private val getFirebaseUserUseCase: GetFirebaseUserUseCase,
     private val userRepository: UserRepository,
-    private val googleSignInUseCase: GoogleLoginUseCase
 
 
-) :
-    ViewModel() {
-    val validationState = MutableStateFlow<ValidationResult>(ValidationResult.Idle)
-    val facebookLoginState = MutableStateFlow<FacebookLoginResult>(FacebookLoginResult.Idle)
-    private val _googleSignInState = MutableStateFlow<GoogleSignInResult>(GoogleSignInResult.Idle)
-    val googleSignInState: StateFlow<GoogleSignInResult> = _googleSignInState
+    ) : ViewModel() {
+    private val _registerState: MutableStateFlow<RegisterState> =
+        MutableStateFlow(RegisterState.Initial)
+    val registerState = _registerState.asStateFlow()
+
     fun validateUserInput(username: String, email: String, phone: String, password: String) {
         viewModelScope.launch {
-            val user = User(username, email, phone, password)
-            validationState.value = validateInputFields(user)
+            _registerState.value = RegisterState.Loading
+            val result = withContext(Dispatchers.IO) {
+                inputFieldValidator.registrationValidator(username, email, phone, password)
+            }
+
+            val nextState = when (result) {
+                is Result.Success -> RegisterState.ValidInput
+                is Result.Error -> RegisterState.Error(result.error)
+            }
+            _registerState.value = nextState
         }
     }
 
     fun resetValidationState() {
-        validationState.value = ValidationResult.Idle
+        _registerState.value = RegisterState.Initial
     }
 
-    fun loginWithFacebook(token: AccessToken) {
-        viewModelScope.launch {
-            facebookLoginState.value = FacebookLoginResult.Loading
-            val result = facebookLoginUseCase(token)
-            facebookLoginState.value = if (result.isSuccess) {
-                FacebookLoginResult.Success
-            } else {
-                FacebookLoginResult.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+    fun getGoogleSignInClient(): GoogleSignInClient {
+        val googleClient = googleSignInUseCase.setupGoogleSignInClient()
+        return googleClient
+    }
+
+    fun handleGoogleSignIn(data: Intent?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _registerState.value = RegisterState.Loading
+            googleSignInUseCase.handleGoogleSignInResult(data).flatMapLatest { result ->
+                when (result) {
+                    is Result.Error -> flowOf(result)
+                    is Result.Success -> if (result.data) saveUserToFirebaseUseCase.saveGoogleFacebookUser() else emptyFlow()
+                }
+            }.collectLatest {
+                handleSignUpResult(it)
             }
         }
     }
 
-    fun signInWithGoogle(credential: String) {
-        viewModelScope.launch {
-            _googleSignInState.value = GoogleSignInResult.Loading
-            val result = googleSignInUseCase.signInWithGoogle(credential)
-            _googleSignInState.value = if (result.isSuccess) {
-                GoogleSignInResult.Success
-            } else {
-                GoogleSignInResult.Error(result.exceptionOrNull()?.message ?: "Sign-in failed")
-            }
+    fun handleFacebookAccessToken(token: AccessToken) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _registerState.value = RegisterState.Loading
+
+            facebookSignInUseCase.handleFacebookAccessToken(token).flatMapLatest { result ->
+                when (result) {
+                    is Result.Error -> flowOf(result)
+
+
+                    is Result.Success -> {
+                        if (result.data) saveUserToFirebaseUseCase.saveGoogleFacebookUser()
+                        else emptyFlow()
+                    }
+                }
+            }.collectLatest {handleSignUpResult(it)
+                }
         }
     }
+    /*private suspend fun handleSignUpResult(result: Result<Unit>) {
+        when (result) {
+            is Result.Error -> _registerState.emit(RegisterState.Error(FailedToSaveUserException()))
+            is Result.Success -> {
+                val userResult = getFirebaseUserUseCase().first()
+                if (userResult is Result.Success) {
+                    saveUserLocally(userResult.data)
+                    _registerState.emit(RegisterState.CredentialSignInSuccess)
+                } else {
+                    _registerState.emit(RegisterState.Error(FailedToSaveUserException()))
+                }
+            }
+        }
+    }*/
+    private suspend fun handleSignUpResult(result: Result<Unit>) {
+        val nextState = when (result) {
+            is Result.Error -> RegisterState.Error(result.error)
+            is Result.Success -> {
+                val userResult = getFirebaseUserUseCase().first()
+                if (userResult is Result.Success) {
+                    saveUserLocally(userResult.data)
+                    RegisterState.CredentialSignInSuccess
+                } else {
+                    RegisterState.Error(FailedToSaveUserException())
+                }
+            }
+        }
+        _registerState.emit(nextState)
+    }
 
-    fun saveUserLocally(user: User) {
-        viewModelScope.launch {
+    private fun saveUserLocally(user: User) {
+        viewModelScope.launch(Dispatchers.IO) {
             userRepository.saveUserToLocal(user)
         }
     }
 }
-
-sealed class GoogleSignInResult {
-    object Idle : GoogleSignInResult()
-    object Loading : GoogleSignInResult()
-    object Success : GoogleSignInResult()
-    data class Error(val message: String) : GoogleSignInResult()
-}
-
-sealed class FacebookLoginResult {
-    object Idle : FacebookLoginResult()
-    object Loading : FacebookLoginResult()
-    object Success : FacebookLoginResult()
-    data class Error(val message: String) : FacebookLoginResult()
-}
-

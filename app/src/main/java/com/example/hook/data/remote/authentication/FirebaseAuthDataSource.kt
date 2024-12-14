@@ -1,154 +1,220 @@
 package com.example.hook.data.remote.authentication
 
-import android.content.Intent
-import android.util.Log
+import com.example.hook.common.exception.FailedToSaveUserException
+import com.example.hook.common.exception.IncorrectPasswordException
+import com.example.hook.common.exception.UnexpectedErrorException
+import com.example.hook.common.exception.UnregisteredUserException
+import com.example.hook.common.exception.UserNotLoggedInException
+import com.example.hook.common.ext.asFlow
+import com.example.hook.common.ext.mapError
+import com.example.hook.common.ext.mapSuccess
+import com.example.hook.common.result.Result
+import com.example.hook.domain.model.User
+import com.example.hook.domain.repository.UserRepository
 import com.facebook.AccessToken
-import com.facebook.internal.BoltsMeasurementEventListener
-import com.google.android.gms.auth.api.identity.BeginSignInRequest
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.android.gms.auth.api.identity.SignInCredential
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class FirebaseAuthDataSource(
+class FirebaseAuthDataSource @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-
-
-    ) {
-
-    suspend fun registerUser(
-        username: String,
-        email: String,
-        phoneNumber: String,
-        password: String
-    ): Result<Unit> {
-        return try {
-            val currentUser = auth.currentUser
-                ?: return Result.failure(Exception("No authenticated user to link credentials"))
-            val emailCredential =
-                com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
-            currentUser.linkWithCredential(emailCredential).await()
-            val userId = currentUser.uid
-            val userData = hashMapOf(
-                "username" to username,
-                "phoneNumber" to phoneNumber,
-                "email" to email
-            )
-            try {
-                firestore.collection("users")
-                    .document(userId)
-                    .set(userData)
-                    .await()
-                Result.success(Unit)
-            } catch (firestoreException: Exception) {
-                Result.failure(Exception("Failed to save user data to Firestore: ${firestoreException.message}"))
+    private val userRepository: UserRepository
+) {
+    fun registerUser(
+        username: String, email: String, phoneNumber: String, password: String
+    ): Flow<Result<Unit>> {
+        return when (val currentUserResult = getCurrentUser()) {
+            is Result.Success -> {
+                val currentUser = currentUserResult.data
+                getIdToken(currentUser).flatMapLatest { tokenResult ->
+                    when (tokenResult) {
+                        is Result.Success -> {
+                            val token = tokenResult.data
+                            linkEmailCredential(
+                                currentUser, EmailAuthProvider.getCredential(email, password)
+                            ).flatMapLatest { linkResult ->
+                                when (linkResult) {
+                                    is Result.Success -> {
+                                        saveUserToFirestore(
+                                            username = username,
+                                            email = email,
+                                            phoneNumber = phoneNumber,
+                                            firebaseToken = token,
+                                            userId = currentUser.uid
+                                        ).mapSuccess { }
+                                    }
+                                    is Result.Error -> flowOf(Result.Error(linkResult.error))
+                                }
+                            }
+                        }
+                        is Result.Error -> flowOf(Result.Error(tokenResult.error))
+                    }
+                }
             }
-        } catch (e: Exception) {
-            Result.failure(e)
+            is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
         }
     }
 
-    suspend fun isUsernameTaken(username: String): Boolean {
-        return try {
-            val snapshot = firestore.collection("users")
-                .whereEqualTo("username", username)
-                .get()
-                .await()
-            !snapshot.isEmpty
-        } catch (e: Exception) {
-            false
+
+    private fun linkEmailCredential(
+        currentUser: FirebaseUser, emailCredential: AuthCredential
+    ): Flow<Result<AuthResult>> = currentUser.linkWithCredential(emailCredential).asFlow()
+
+    fun getIdToken(currentUser: FirebaseUser?): Flow<Result<String>> {
+        return currentUser?.getIdToken(true)?.asFlow()?.mapSuccess { it.token.orEmpty()} ?: flowOf(
+            Result.Error(UserNotLoggedInException())
+        )
+    }
+
+    fun saveUserToFirestore(
+        username: String?,
+        email: String?,
+        phoneNumber: String?,
+        firebaseToken: String,
+        userId: String
+    ): Flow<Result<Boolean>> = firestore.collection(USERS).document(userId).set(
+        hashMapOf(
+            USERNAME to username,
+            EMAIL to email,
+            PHONE_NUMBER to phoneNumber,
+            FIREBASE_TOKEN to firebaseToken
+        )
+    ).asFlow().mapSuccess { true }
+
+    fun saveFacebookGoogleUser(): Flow<Result<Unit>> =
+        when (val currentUserResult = getCurrentUser()) {
+            is Result.Success -> {
+                val currentUser = currentUserResult.data
+                getIdToken(currentUser).flatMapLatest { tokenResult ->
+                    when (tokenResult) {
+                        is Result.Success -> {
+                            getFirebaseUser().flatMapLatest { firebaseUserResult ->
+                                when (firebaseUserResult) {
+                                    is Result.Success -> {
+                                        val existingUser = firebaseUserResult.data
+                                        val mergedUsername =
+                                            existingUser.username ?: currentUser.displayName
+                                        val mergedPhoneNumber = existingUser.phoneNumber
+                                            ?: currentUser.phoneNumber
+                                        val mergedEmail = currentUser.email
+                                        saveUserToFirestore(
+                                            username = mergedUsername,
+                                            email = mergedEmail,
+                                            phoneNumber = mergedPhoneNumber,
+                                            firebaseToken = tokenResult.data,
+                                            userId = currentUser.uid
+                                        ).mapSuccess { Unit }
+                                            .mapError { FailedToSaveUserException() }
+                                    }
+
+                                    is Result.Error -> flowOf(Result.Error(firebaseUserResult.error))
+                                }
+                            }
+                        }
+
+                        is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
+                    }
+                }
+            }
+
+            is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
         }
-    }
 
-    suspend fun isEmailTaken(email: String): Boolean {
-        return try {
-            val snapshot = firestore.collection("users")
-                .whereEqualTo("email", email)
-                .get()
-                .await()
-            !snapshot.isEmpty
-        } catch (e: Exception) {
-            false
+
+    fun isUsernameTaken(username: String): Flow<Result<Boolean>> =
+        firestore.collection(USERS).whereEqualTo(USERNAME, username).get().asFlow()
+            .mapSuccess { !it.isEmpty }
+
+    fun isEmailTaken(email: String): Flow<Result<Boolean>> =
+        firestore.collection(USERS).whereEqualTo(EMAIL, email).get().asFlow()
+            .mapSuccess { !it.isEmpty }
+
+    fun isPhoneNumberRegistered(
+        phoneNumber: String
+    ): Flow<Result<Boolean>> =
+        firestore.collection(USERS).whereEqualTo(PHONE_NUMBER, phoneNumber).get().asFlow()
+            .mapSuccess { !it.isEmpty }
+
+    fun phoneSignUp(credential: AuthCredential): Flow<Result<Unit>> =
+        FirebaseAuth.getInstance().signInWithCredential(credential).asFlow().mapSuccess { }
+
+    fun loginUser(email: String, password: String): Flow<Result<Unit>> =
+        isEmailTaken(email).flatMapLatest { emailCheckResult ->
+            when (emailCheckResult) {
+                is Result.Success -> {
+                    if (emailCheckResult.data) {
+                        auth.signInWithEmailAndPassword(email, password).asFlow()
+                            .mapSuccess { Unit }.mapError { error ->
+                                when (error) {
+                                    is FirebaseAuthInvalidCredentialsException -> IncorrectPasswordException()
+                                    else -> UnexpectedErrorException()
+                                }
+                            }
+                    } else {
+                        flowOf(Result.Error(UnregisteredUserException()))
+                    }
+                }
+
+                is Result.Error -> flowOf(Result.Error(emailCheckResult.error))
+            }
         }
-    }
 
-    suspend fun isPhoneNumberRegistered(phoneNumber: String): Boolean {
-        return try {
-            val snapshot =
-                firestore.collection("users").whereEqualTo("phoneNumber", phoneNumber).get().await()
-            !snapshot.isEmpty
-        } catch (e: Exception) {
-            false
+    fun getFirebaseUser(): Flow<Result<User>> = when (val currentUserResult = getCurrentUser()) {
+        is Result.Success -> {
+            firestore.collection(USERS).document(currentUserResult.data.uid).get().asFlow()
+                .mapSuccess { documentSnapshot ->
+                    User(
+                        username = documentSnapshot.getString(USERNAME),
+                        email = documentSnapshot.getString(EMAIL),
+                        phoneNumber = documentSnapshot.getString(PHONE_NUMBER),
+                        firebaseToken = documentSnapshot.getString(
+                            FIREBASE_TOKEN
+                        )
+                    )
+                }
         }
 
+        is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
     }
 
 
-    fun isValidPhoneNumber(phone: String): Boolean {
-        return phone.matches(validPhoneNumberPattern)
-    }
+    fun sendPasswordResetEmail(email: String): Flow<Result<Unit>> =
+        auth.sendPasswordResetEmail(email).asFlow().mapSuccess { (Unit) }
 
-    fun isValidPassword(password: String): Boolean {
-        return password.matches(validPasswordPattern)
+    fun signInWithCredential(credential: AuthCredential): Flow<Result<Boolean>> =
+        auth.signInWithCredential(credential).asFlow().mapSuccess { (true) }
+
+    fun signInWithGoogle(credential: AuthCredential): Flow<Result<Unit>> =
+        auth.signInWithCredential(credential).asFlow().mapSuccess { (Unit) }
+
+    fun signInWithFacebook(token: AccessToken): Flow<Result<Unit>> =
+        auth.signInWithCredential(FacebookAuthProvider.getCredential(token.token)).asFlow()
+            .mapSuccess { (Unit) }
+
+    fun getCurrentUser(): Result<FirebaseUser> {
+        return auth.currentUser?.let {
+            Result.Success(it)
+        } ?: Result.Error(UserNotLoggedInException())
     }
 
     companion object {
-        private val validPasswordPattern = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).+$")
-        private val validPhoneNumberPattern = Regex("^\\+\\d{7,15}$")
-
+        private const val USERS = "users"
+        private const val USERNAME = "username"
+        private const val PHONE_NUMBER = "phoneNumber"
+        private const val FIREBASE_TOKEN = "firebaseToken"
+        private const val EMAIL = "email"
     }
 
-    fun getFacebookAuthCredential(token: AccessToken): AuthCredential {
-        return com.google.firebase.auth.FacebookAuthProvider.getCredential(token.token)
-    }
-
-    suspend fun signInWithFacebook(credential: AuthCredential): Result<Unit> {
-        return try {
-            auth.signInWithCredential(credential).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
-    suspend fun signInWithGoogle(credential: String): Result<Unit> {
-        return try {
-            val firebaseCredential = GoogleAuthProvider.getCredential(credential, null)
-            auth.signInWithCredential(firebaseCredential).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
-    suspend fun phoneVerification(credential: AuthCredential): Result<Boolean> {
-        return try {
-            val currentUser = auth.currentUser
-            if (currentUser != null) {
-                currentUser.linkWithCredential(credential).await()
-            } else {
-                auth.signInWithCredential(credential).await()
-            }
-            Result.success(true)
-        } catch (e: Exception) {
-            Log.e("FirebaseAuthDataSource", "phoneVerification failed: ${e.message}", e)
-            Result.failure(e)
-        }
-    }
-    suspend fun loginUser(email: String, password: String): Result<Unit> {
-        return try {
-            auth.signInWithEmailAndPassword(email, password).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

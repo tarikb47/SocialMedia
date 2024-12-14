@@ -36,6 +36,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/register_title" />
+    <ProgressBar
+        android:id="@+id/register_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_l"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/register_subtitle"
+        app:layout_constraintBottom_toTopOf="@+id/registration_username_edit_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 
     <EditText
         android:id="@+id/registration_username_edit_text"

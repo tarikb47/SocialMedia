@@ -3,13 +3,11 @@ package com.example.hook.presentation.authentication.phoneVerification
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hook.data.remote.authentication.FirebaseAuthDataSource
-import com.example.hook.domain.model.User
-import com.example.hook.domain.repository.AuthRepository
-import com.example.hook.domain.repository.UserRepository
-import com.example.hook.domain.usecase.RegisterUseCase
-import com.example.hook.domain.usecase.SendPhoneVerificationUseCase
-import com.example.hook.domain.usecase.VerifyPhoneCodeUseCase
+import com.example.hook.common.exception.RegistrationFailedException
+import com.example.hook.common.exception.VerificationFailedException
+import com.example.hook.domain.usecases.remotedatabaseusecases.RegisterUseCase
+import com.example.hook.domain.usecases.remotedatabaseusecases.SendPhoneVerificationUseCase
+import com.example.hook.domain.usecases.remotedatabaseusecases.PhoneSignupCodeUseCase
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
@@ -18,102 +16,104 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.hook.common.result.Result
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 
 @HiltViewModel
 class PhoneVerificationViewModel @Inject constructor(
     private val sendPhoneVerificationUseCase: SendPhoneVerificationUseCase,
-    private val verifyPhoneCodeUseCase: VerifyPhoneCodeUseCase,
+    private val phoneSignupCodeUseCase: PhoneSignupCodeUseCase,
     private val registerUseCase: RegisterUseCase,
-    private val userRepository: UserRepository
 ) : ViewModel() {
-    private var fetchedUser: User? = null
     private val _verificationState = MutableStateFlow<VerificationState>(VerificationState.Idle)
     val verificationState: StateFlow<VerificationState> = _verificationState
-    private val _registrationState = MutableStateFlow<RegisterState>(RegisterState.Idle)
-    val registrationState: StateFlow<RegisterState> = _registrationState
-    private val _userLocalFetchStateFlow = MutableStateFlow<UserLocalState>(UserLocalState.Idle)
-    val userLocalFetchStateFlow: StateFlow<UserLocalState> = _userLocalFetchStateFlow
 
-    fun sendVerificationCode(phoneNumber: String) {
+    fun sendVerificationCode(phoneNumber: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+            sendPhoneVerificationUseCase(
+                phoneNumber,
+                object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                    override fun onCodeSent(
+                        verificationId: String,
+                        token: PhoneAuthProvider.ForceResendingToken
+                    ) {
+                        _verificationState.value = VerificationState.CodeSent(verificationId)
+                    }
+
+                    override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                        _verificationState.value = VerificationState.CompletedVerification
+                        phoneSignup(credential)
+
+                    }
+
+                    override fun onVerificationFailed(e: FirebaseException) {
+                        _verificationState.value =
+                            VerificationState.Error(e)
+                    }
+                })
+
+        }
+
+
+    private fun phoneSignup(credential: PhoneAuthCredential) =
+        viewModelScope.launch(Dispatchers.IO) {
+            phoneSignupCodeUseCase(credential).collectLatest { result ->
+                when (result) {
+                    is Result.Success -> _verificationState.value =
+                        VerificationState.SignedInWithPhoneNumber
+
+                    is Result.Error -> _verificationState.value =
+                        VerificationState.Error(VerificationFailedException())
+                }
+            }
+        }
+
+
+    fun phoneSignUWithCode(verificationId: String, code: String) {
         _verificationState.value = VerificationState.Loading
         viewModelScope.launch {
-            try {
-                sendPhoneVerificationUseCase(
-                    phoneNumber,
-                    object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                        override fun onCodeSent(
-                            verificationId: String,
-                            token: PhoneAuthProvider.ForceResendingToken
-                        ) {
-                            Log.d("Tarik", "sendalo")
-
-                            _verificationState.value = VerificationState.CodeSent(verificationId)
-                        }
-                        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                            Log.d("Tarik", "completana")
-                            _verificationState.value = VerificationState.Completed
-                        }
-
-                        override fun onVerificationFailed(e: FirebaseException) {
-                            Log.d("Tarik", "feilalo")
-
-                            _verificationState.value =
-                                VerificationState.Error(e.message ?: "Verification failed")
-                        }
-
-                        // provjeritie state koji baca gdje
-                        // meni je s tobom lila lila sve
-
-                    })
-            } catch (e: Exception) {
-                _verificationState.value =
-                    VerificationState.Error(e.message ?: "Failed to send code")
-            }
+            val credential = PhoneAuthProvider.getCredential(verificationId, code)
+            phoneSignup(credential)
         }
     }
 
-    fun verifyCode(verificationId: String, code: String, user: User) {
-        viewModelScope.launch {
-            try {
-                val credential = PhoneAuthProvider.getCredential(verificationId, code)
-                val result = verifyPhoneCodeUseCase(credential)
-                if (result.isSuccess) {
-                    _verificationState.value = VerificationState.Completed
-                    //registerUser(user)
-                } else {
-                    _verificationState.value = VerificationState.Error("Verification failed")
-                }
-            } catch (e: Exception) {
-                _verificationState.value =
-                    VerificationState.Error(e.message ?: "Verification failed")
+    fun registerUser(
+        username: String,
+        email: String,
+        phoneNumber: String,
+        password: String
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        if (_verificationState.value != VerificationState.SignedInWithPhoneNumber) {
+            _verificationState.value = VerificationState.Error(VerificationFailedException())
+            return@launch
+        }
+
+        registerUseCase(username, email, phoneNumber, password).collectLatest { result ->
+            when (result) {
+                is Result.Success -> _verificationState.emit(VerificationState.UserRegistered)
+                is Result.Error -> _verificationState.emit(
+                    VerificationState.Error(
+                        RegistrationFailedException()
+                    )
+                )
             }
         }
     }
-
-    fun registerUser(user: User) {
+    /*fun registerUser(username: String, email: String, phoneNumber: String, password: String) {
         viewModelScope.launch {
-            val result = registerUseCase(user)
-            _registrationState.value = if (result.isSuccess) {
-                RegisterState.Success
+            if (_verificationState.value != VerificationState.SignedInWithPhoneNumber) {
+                _verificationState.value = VerificationState.Error(VerificationFailedException())
+                return@launch
+            }
+            val result = registerUseCase(username,email, phoneNumber, password)
+            _verificationState.value = if (result is Result.Success) {
+                VerificationState.UserRegistered
             } else {
-                RegisterState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                VerificationState.Error(RegistrationFailedException())
             }
         }
-    }
-
-    fun getUserFromLocal(userId: Int) {
-        viewModelScope.launch {
-            _userLocalFetchStateFlow.value = UserLocalState.Loading
-            val user = userRepository.getUserFromLocal(userId)
-            if (user != null) {
-                fetchedUser = user
-                _userLocalFetchStateFlow.value = UserLocalState.Success(user)
-            } else {
-                _userLocalFetchStateFlow.value = UserLocalState.Error("User not found")
-            }
-
-        }
-    }
-
-    fun getFetchedUser() = fetchedUser
+    }*/
 }
+

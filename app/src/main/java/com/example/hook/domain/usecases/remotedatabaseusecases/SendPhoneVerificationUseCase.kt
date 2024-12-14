@@ -1,4 +1,5 @@
-package com.example.hook.domain.usecase
+package com.example.hook.domain.usecases.remotedatabaseusecases
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -16,7 +17,6 @@ class SendPhoneVerificationUseCase @Inject constructor(val auth: FirebaseAuth) {
             .setTimeout(60L, TimeUnit.SECONDS)
             .setCallbacks(callbacks)
             .build()
-
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 }
