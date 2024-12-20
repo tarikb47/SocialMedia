@@ -35,6 +35,29 @@
     <string name="chats">Chats</string>
     <string name="contacts">Contacts</string>
     <string name="settings">Settings</string>
+    <string name="account">Account</string>
+    <string name="stories">My Strories</string>
+    <string name="recent_calls">Recent Calls</string>
+    <string name="folders">Chat Folders</string>
+    <string name="notifications_and_sound">Notifications and Sounds</string>
+    <string name="privacy">Privacy and Security</string>
+    <string name="data">Data and Storage</string>
+    <string name="new_contact">New Contact</string>
+    <string name="close">Close</string>
+    <string name="username">Username</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="contact_option">Username/Email/Phone Number</string>
+    <string name="nickname_optional">Optional custom username</string>
+    <string name="edit">Edit</string>
 
 
+
+
+    <string-array name="spinner_menu_items">
+        <item>Find People Nearby</item>
+        <item>Invite Friends</item>
+        <item>Contact Categories</item>
+        <item>Add New Contact</item>
+    </string-array>
 </resources>

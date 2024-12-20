@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@color/white">
+    android:background="@color/white"
+    >
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/onboarding_fragment"
         android:layout_width="match_parent"
@@ -14,4 +15,8 @@
         app:navGraph = "@navigation/nav_graph"
         app:defaultNavHost="true"
         android:name="androidx.navigation.fragment.NavHostFragment" />
+
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

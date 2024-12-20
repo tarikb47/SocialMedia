@@ -25,7 +25,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
+    <ProgressBar
+        android:id="@+id/register_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_l"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/login_title"
+        app:layout_constraintBottom_toTopOf="@+id/email_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
     <TextView
         android:id="@+id/email_title"
         android:layout_width="wrap_content"

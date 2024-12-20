@@ -150,7 +150,7 @@ class RegisterFragment : Fragment() {
         binding.registerProgressBar.visibility = View.GONE
         showSuccessMessage("Successfully logged in.")
         Handler(Looper.getMainLooper()).postDelayed({
-            findNavController().navigate(R.id.action_registerFragment_to_Home)
+            findNavController().navigate(R.id.action_registerFragment_to_main_nav_graph)
         }, 3500)
     }
     private fun handleError(error: Throwable) {

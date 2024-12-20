@@ -8,7 +8,7 @@ import com.example.hook.data.local.dao.UserDao
 import com.example.hook.data.local.entity.UserEntity
 
 
-@Database(entities = [UserEntity::class], version = 2, exportSchema = false)
+@Database(entities = [UserEntity::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun UserDao() : UserDao
 

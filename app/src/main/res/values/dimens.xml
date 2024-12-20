@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <dimen name="dimen_four">4dp</dimen>
     <dimen name="dimen_eight">8dp</dimen>
     <dimen name="dimen_sixteen">16dp</dimen>
@@ -56,6 +56,8 @@
     <dimen name="text_size_body_3">12dp</dimen>
     <dimen name="text_size_body_4">10dp</dimen>
     <dimen name="text_size_body_5">8dp</dimen>
+    <dimen name="text_size_image_letter">48dp</dimen>
+
     <!--endregion-->
 
 </resources>

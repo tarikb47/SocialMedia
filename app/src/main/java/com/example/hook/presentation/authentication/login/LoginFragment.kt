@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.hook.R
 import com.example.hook.common.exception.BlankFieldsException
@@ -31,8 +32,6 @@ class LoginFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var callbackManager: CallbackManager
     private lateinit var googleSignInClient: GoogleSignInClient
-    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -93,30 +92,56 @@ class LoginFragment : Fragment() {
             viewModel.loginState.collect { state ->
                 when (state) {
                     is LoginState.Loading -> {
+                        binding.registerProgressBar.visibility = View.VISIBLE
                     }
 
                     is LoginState.Success -> {
+                        binding.registerProgressBar.visibility = View.GONE
                         showSuccessMessage("Login successfully")
-                        findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
+                        findNavController().navigate(
+                            R.id.action_loginFragment_to_main_nav_graph,
+                            null,
+                            NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_graph, true)
+                                .build()
+                        )
                     }
 
                     is LoginState.Error -> {
+                        binding.registerProgressBar.visibility = View.GONE
                         handleError(state.message)
                     }
 
                     is LoginState.Idle -> {
                     }
 
-                    is LoginState.EmailSent -> showSuccessMessage("Reset password email sent.")
+                    is LoginState.EmailSent -> {
+                        showSuccessMessage("Reset password email sent.")
+                        binding.registerProgressBar.visibility = View.GONE
+                    }
                     is LoginState.FacebookSignIn -> {
+                        binding.registerProgressBar.visibility = View.GONE
                         showSuccessMessage("Login successfully")
-                        findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
+                        findNavController().navigate(
+                            R.id.action_loginFragment_to_main_nav_graph,
+                            null,
+                            NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_graph, true)
+                                .build()
+                        )
                     }
 
                     is LoginState.Initial -> {}
                     is LoginState.GoogleSignIn -> {
+                        binding.registerProgressBar.visibility = View.GONE
                         showSuccessMessage("Login successfully")
-                        findNavController().navigate(R.id.action_loginFragment_to_HomeFragment)
+                        findNavController().navigate(
+                            R.id.action_loginFragment_to_main_nav_graph,
+                            null,
+                            NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_graph, true)
+                                .build()
+                        )
                     }
                 }
             }

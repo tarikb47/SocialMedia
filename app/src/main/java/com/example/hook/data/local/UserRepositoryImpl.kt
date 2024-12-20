@@ -11,10 +11,12 @@ class UserRepositoryImpl @Inject constructor(private val userDao: UserDao) : Use
     override suspend fun saveUserToLocal(user: User) {
         val userEntity = UserEntity(
             id = 1,
+            remoteVid = user.id,
             username = user.username,
             email = user.email,
             phoneNumber = user.phoneNumber,
-            firebaseToken = user.firebaseToken
+            firebaseToken = user.firebaseToken,
+            user.photoUrl
         )
         userDao.insertUser(userEntity)
     }
@@ -29,9 +31,15 @@ class UserRepositoryImpl @Inject constructor(private val userDao: UserDao) : Use
                 username = it.username,
                 email = it.email,
                 phoneNumber = it.phoneNumber,
-                firebaseToken = it.firebaseToken
+                firebaseToken = it.firebaseToken,
+             photoUrl =  it.photoUrl,
+              id = it.remoteVid
             )
         }
+    }
+    override suspend fun getUserEntityFromLocal() : UserEntity {
+    return   userDao.getUserById(1)
+
     }
     override suspend fun clearLocalUserData() {
         userDao.clearAllUsers()

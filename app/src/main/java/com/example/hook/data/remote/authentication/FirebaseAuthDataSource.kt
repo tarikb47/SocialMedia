@@ -1,5 +1,7 @@
 package com.example.hook.data.remote.authentication
 
+import android.net.Uri
+import com.example.hook.common.enums.FieldType
 import com.example.hook.common.exception.FailedToSaveUserException
 import com.example.hook.common.exception.IncorrectPasswordException
 import com.example.hook.common.exception.UnexpectedErrorException
@@ -9,6 +11,7 @@ import com.example.hook.common.ext.asFlow
 import com.example.hook.common.ext.mapError
 import com.example.hook.common.ext.mapSuccess
 import com.example.hook.common.result.Result
+import com.example.hook.domain.model.Contact
 import com.example.hook.domain.model.User
 import com.example.hook.domain.repository.UserRepository
 import com.facebook.AccessToken
@@ -19,11 +22,14 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -55,14 +61,17 @@ class FirebaseAuthDataSource @Inject constructor(
                                             userId = currentUser.uid
                                         ).mapSuccess { }
                                     }
+
                                     is Result.Error -> flowOf(Result.Error(linkResult.error))
                                 }
                             }
                         }
+
                         is Result.Error -> flowOf(Result.Error(tokenResult.error))
                     }
                 }
             }
+
             is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
         }
     }
@@ -73,9 +82,24 @@ class FirebaseAuthDataSource @Inject constructor(
     ): Flow<Result<AuthResult>> = currentUser.linkWithCredential(emailCredential).asFlow()
 
     fun getIdToken(currentUser: FirebaseUser?): Flow<Result<String>> {
-        return currentUser?.getIdToken(true)?.asFlow()?.mapSuccess { it.token.orEmpty()} ?: flowOf(
+        return currentUser?.getIdToken(true)?.asFlow()?.mapSuccess { it.token.orEmpty() } ?: flowOf(
             Result.Error(UserNotLoggedInException())
         )
+    }
+
+    fun uploadUserPhoto(userId: String, photoUri: Uri): Flow<Result<String>> {
+        val storageRef = FirebaseStorage.getInstance().reference
+            .child("userPhotos/$userId/profile.jpg")
+
+        return storageRef.putFile(photoUri).asFlow()
+            .flatMapLatest {
+                storageRef.downloadUrl.asFlow()
+            }
+            .mapSuccess { uri -> uri.toString() }
+            .flatMapLatest { photoUrl ->
+                firestore.collection(USERS).document(userId).update(PHOTO_URL, photoUrl).asFlow()
+                    .mapSuccess { photoUrl.toString() }
+            }
     }
 
     fun saveUserToFirestore(
@@ -83,13 +107,15 @@ class FirebaseAuthDataSource @Inject constructor(
         email: String?,
         phoneNumber: String?,
         firebaseToken: String,
-        userId: String
+        userId: String,
+        photoUrl: String? = "https://firebasestorage.googleapis.com/v0/b/hook-c47b9.firebasestorage.app/o/Izvor%20nade.jpg?alt=media&token=96c4db7b-03db-402b-854f-05644932f5da"
     ): Flow<Result<Boolean>> = firestore.collection(USERS).document(userId).set(
         hashMapOf(
             USERNAME to username,
             EMAIL to email,
             PHONE_NUMBER to phoneNumber,
-            FIREBASE_TOKEN to firebaseToken
+            FIREBASE_TOKEN to firebaseToken,
+            PHOTO_URL to photoUrl
         )
     ).asFlow().mapSuccess { true }
 
@@ -179,15 +205,83 @@ class FirebaseAuthDataSource @Inject constructor(
                         username = documentSnapshot.getString(USERNAME),
                         email = documentSnapshot.getString(EMAIL),
                         phoneNumber = documentSnapshot.getString(PHONE_NUMBER),
-                        firebaseToken = documentSnapshot.getString(
-                            FIREBASE_TOKEN
-                        )
+                        firebaseToken = documentSnapshot.getString(FIREBASE_TOKEN),
+                        photoUrl = documentSnapshot.getString(PHOTO_URL),
+                        id = currentUserResult.data.uid
+
                     )
                 }
         }
 
         is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
     }
+    fun getContactByField(fieldValue: String, fieldType: FieldType): Flow<Result<Contact>> {
+        val fieldName: String = when (fieldType) {
+            FieldType.USERNAME -> USERNAME
+            FieldType.EMAIL -> EMAIL
+            FieldType.PHONE_NUMBER -> PHONE_NUMBER
+        }
+
+        return firestore.collection(USERS)
+            .whereEqualTo(fieldName, fieldValue)
+            .get()
+            .asFlow()
+            .map { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val document = result.data.documents.firstOrNull()
+                        if (document == null) {
+                            Result.Error(UnregisteredUserException())
+                        } else {
+                            Result.Success(
+                                Contact(
+                                    userId = document.id,
+                                    username = document.getString(USERNAME),
+                                    email = document.getString(EMAIL),
+                                    phoneNumber = document.getString(PHONE_NUMBER),
+                                    photoUrl = document.getString(PHOTO_URL)
+                                )
+                            )
+                        }
+                    }
+                    is Result.Error -> Result.Error(result.error)
+                }
+            }
+    }
+   /* fun getContactByField(fieldValue: String, fieldType: FieldType): Flow<Result<Contact>> {
+        val fieldName: String = when (fieldType) {
+            FieldType.USERNAME -> USERNAME
+            FieldType.EMAIL -> EMAIL
+            FieldType.PHONE_NUMBER -> PHONE_NUMBER
+        }
+
+        return firestore.collection(USERS)
+            .whereEqualTo(fieldName, fieldValue)
+            .get()
+            .asFlow()
+            .mapSuccess { querySnapshot ->
+                val document = querySnapshot.documents.firstOrNull()
+                if (document == null){
+                    throw UnregisteredUserException()
+                }
+                else {
+                    Contact(
+                        userId = document.id,
+                        username = document.getString(USERNAME),
+                        email = document.getString(EMAIL),
+                        phoneNumber = document.getString(PHONE_NUMBER),
+                        photoUrl = document.getString(PHOTO_URL)
+                    )
+                }
+            }
+            .mapError { error ->
+                when (error) {
+                    is UnregisteredUserException -> error
+                    else -> UnexpectedErrorException()
+                }
+            }
+    }*/
+
 
 
     fun sendPasswordResetEmail(email: String): Flow<Result<Unit>> =
@@ -215,6 +309,7 @@ class FirebaseAuthDataSource @Inject constructor(
         private const val PHONE_NUMBER = "phoneNumber"
         private const val FIREBASE_TOKEN = "firebaseToken"
         private const val EMAIL = "email"
+        private const val PHOTO_URL = "photoUrl"
     }
 
 }
