@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:icon="@drawable/chats_circle_thin_svgrepo_com"
         android:id="@+id/nav_chats"
         android:title="@string/chats" />
     <item
+        android:icon="@drawable/two_contacts_svgrepo_com"
         android:id="@+id/nav_contacts"
         android:title="@string/contacts" />
     <item
+        android:icon="@drawable/settings_svgrepo_com"
         android:id="@+id/nav_settings"
         android:title="@string/settings" />
 

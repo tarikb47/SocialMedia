@@ -22,3 +22,5 @@ class FacebookSignInFailedException : Throwable("Facebook sign-in failed")
 class FacebookLoginCancelledException : Throwable("Facebook login cancelled")
 class VerificationFailedException : Throwable("Verification failed")
 class RegistrationFailedException : Throwable("Failed to register user.")
+class BlankFieldException : Throwable("Enter value.")
+

@@ -101,19 +101,6 @@ class PhoneVerificationViewModel @Inject constructor(
             }
         }
     }
-    /*fun registerUser(username: String, email: String, phoneNumber: String, password: String) {
-        viewModelScope.launch {
-            if (_verificationState.value != VerificationState.SignedInWithPhoneNumber) {
-                _verificationState.value = VerificationState.Error(VerificationFailedException())
-                return@launch
-            }
-            val result = registerUseCase(username,email, phoneNumber, password)
-            _verificationState.value = if (result is Result.Success) {
-                VerificationState.UserRegistered
-            } else {
-                VerificationState.Error(RegistrationFailedException())
-            }
-        }
-    }*/
+
 }
 

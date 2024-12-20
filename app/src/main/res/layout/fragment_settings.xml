@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.example.hook.presentation.home.settings.SettingsFragmentViewModel" />
+    </data>
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/chats_grey"
+    tools:context=".presentation.home.settings.SettingsFragment">
+
+    <TextView
+        android:id="@+id/settings_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_m"
+        android:layout_marginTop="@dimen/space_5xl"
+        android:text="@string/account"
+        android:textSize="@dimen/text_size_h4"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+    <TextView
+        android:id="@+id/edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/space_m"
+        android:text="@string/edit"
+        android:textColor="@color/hook_blue"
+        android:textSize="@dimen/text_size_h5"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/settings_title" />
+    <ImageView
+        android:id="@+id/image_profile"
+        android:layout_width="@dimen/image_l"
+        android:layout_height="@dimen/image_l"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="@dimen/space_m"
+        android:layout_marginBottom="@dimen/space_m"
+        app:layout_constraintStart_toStartOf="@id/settings_title"
+        app:layout_constraintEnd_toEndOf="@id/settings_title"
+        app:layout_constraintTop_toBottomOf="@id/settings_title"
+        android:contentDescription="@string/image_description"
+        android:layout_marginEnd="@dimen/space_s"
+        android:background="@drawable/circle_shape_image" />
+    <TextView
+        android:layout_marginStart="@dimen/space_l"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:id="@+id/username"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_h5"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/phone_number"
+        app:layout_constraintStart_toEndOf="@id/image_profile"
+        app:layout_constraintTop_toTopOf="@id/image_profile"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/phone_number"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_body_2"
+        app:layout_constraintStart_toStartOf="@id/username"
+        app:layout_constraintTop_toBottomOf="@id/username"
+        app:layout_constraintBottom_toTopOf="@id/email"
+        />
+    <TextView
+        android:id="@+id/email"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_body_2"
+        app:layout_constraintStart_toStartOf="@id/username"
+        app:layout_constraintTop_toBottomOf="@id/phone_number"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

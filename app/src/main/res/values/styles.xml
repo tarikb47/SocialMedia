@@ -47,4 +47,11 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">15sp</item>
     </style>
+    <style name ="bottom_nav" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:paddingBottom">0dp</item>
+        <item name="itemPaddingBottom">0dp</item>
+        <item name="paddingBottomNoButtons">0dp</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+    </style>
+
 </resources>

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.storage.CacheResetOnProcessCanceled.enabled
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,7 +26,8 @@ android {
     }
     buildFeatures {
         viewBinding = true
-        dataBinding = true
+
+        dataBinding= true
     }
     buildTypes {
         release {
@@ -59,6 +62,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.androidx.legacy.support.v4)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     ksp(libs.androidx.room.compiler)
 
     // Dagger Hilt
@@ -84,8 +88,12 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("com.google.android.gms:play-services-identity:18.1.0")
-    implementation (libs.timber)
-
+    implementation(libs.timber)
+    implementation(libs.circleimageview)
+    implementation(libs.glide)
+    ksp(libs.glide)
+    implementation ("androidx.databinding:databinding-runtime:8.7.3")
+    ksp ("androidx.databinding:databinding-compiler:8.7.3")
 
 
 }

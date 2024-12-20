@@ -56,6 +56,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun handleGoogleSignIn(data: Intent?) = viewModelScope.launch(Dispatchers.IO) {
+        _loginState.value = LoginState.Loading
         googleSignInUseCase.handleGoogleSignInResult(data).collectLatest { result ->
             when (result) {
                 is Result.Success -> {
@@ -69,6 +70,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun handleFacebookAccessToken(token: AccessToken) = viewModelScope.launch(Dispatchers.IO) {
+        _loginState.value = LoginState.Loading
         facebookSignInUseCase.handleFacebookAccessToken(token).collectLatest { result ->
             when (result) {
                 is Result.Success -> {
@@ -138,6 +140,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun resetPassword(email: String) {
+        _loginState.value = LoginState.Loading
         if (email.isBlank()) {
             _loginState.value = LoginState.Error(BlankFieldsException())
             return

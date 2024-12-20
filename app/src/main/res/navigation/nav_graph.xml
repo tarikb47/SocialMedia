@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
+    <include app:graph="@navigation/main_nav_graph" />
+        <include app:graph="@navigation/home_nav_graph"/>
 
     <fragment
         android:id="@+id/splashFragment"
@@ -44,8 +46,8 @@
             android:id="@+id/action_registerFragment_to_phoneVerification"
             app:destination="@id/phoneVerificationFragment" />
         <action
-            android:id="@+id/action_registerFragment_to_Home"
-            app:destination="@id/homeFragment" />
+            android:id="@+id/action_registerFragment_to_main_nav_graph"
+            app:destination="@id/main_nav_graph" />
 
 
     </fragment>
@@ -58,8 +60,8 @@
             android:id="@+id/action_loginFragment_to_RegisterFragment"
             app:destination="@id/registerFragment" />
         <action
-            android:id="@+id/action_loginFragment_to_HomeFragment"
-            app:destination="@id/homeFragment" />
+            android:id="@+id/action_loginFragment_to_main_nav_graph"
+            app:destination="@id/main_nav_graph" />
 
 
     </fragment>
@@ -83,10 +85,8 @@
             android:id="@+id/verificationFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
     </fragment>
-    <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.example.hook.presentation.home.HomeFragment"
-        android:label="Home" />
+
+
 
 
 </navigation>
