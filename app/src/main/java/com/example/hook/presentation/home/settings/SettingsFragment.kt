@@ -54,22 +54,22 @@ class SettingsFragment : Fragment() {
                         .transform(CircleCrop())
                         .into(binding.imageProfile)
 
-
                 }
             }
         }
 
         viewModel.getUser()
     }
+
     private fun setupClickListeners() {
-        binding.edit.setOnClickListener{
+        binding.edit.setOnClickListener {
             findNavController().navigate(R.id.action_nav_settings_to_edit_profile)
         }
 
 
     }
 
-        override fun onDestroyView() {
+    override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }

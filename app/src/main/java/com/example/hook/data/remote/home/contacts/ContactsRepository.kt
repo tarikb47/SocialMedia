@@ -37,7 +37,7 @@ class ContactsRepository @Inject constructor(
             .document(contact.userId)
             .set(contact)
             .asFlow()
-            .mapSuccess { Unit }
+            .mapSuccess {  }
     }
 
     suspend fun saveContactToLocal(contact: ContactEntity) {
@@ -83,13 +83,16 @@ class ContactsRepository @Inject constructor(
                             phoneNumber = contact.phoneNumber,
                             email = contact.email,
                             photoUrl = contact.photoUrl
+
                         )
                     )
                 }
             }
         }
     }
-
+    suspend fun deleteContacts(){
+        contactDao.deleteALlContacts()
+    }
     fun deleteContactFromRemote(userId: String, contactId: String): Flow<Result<Unit>> {
         return firestore.collection(USERS_COLLECTION)
             .document(userId)
@@ -107,56 +110,7 @@ class ContactsRepository @Inject constructor(
     }
 
 
-    /* public fun populateMockContactsForAllUsers() {
-         firestore.collection(USERS_COLLECTION)
-             .get()
-             .addOnSuccessListener { querySnapshot ->
-                 val users = querySnapshot.documents
-                 users.forEach { userDocument ->
-                     val userId = userDocument.id
-                     val mockContacts = generateMockContactsForUser(userId, userDocument)
-                     mockContacts.forEach { contact ->
-                         firestore.collection(USERS_COLLECTION)
-                             .document(userId)
-                             .collection(CONTACTS_COLLECTION)
-                             .document(contact.userId)
-                             .set(contact)
-                             .addOnSuccessListener {
-                                 Log.i(
-                                     "Tarik",
-                                     "populateMockContactsForAllUsers: Contact added for user $userId"
-                                 )
-                             }
-                             .addOnFailureListener { e ->
-                                 Log.e(
-                                     "Tarik",
-                                     "Failed to add mock contact for user: $userId, error: $e"
-                                 )
-                             }
-                     }
-                 }
-             }
-             .addOnFailureListener { e ->
-                 Log.e("Tarik", "Failed to fetch users: $e")
-             }
-     }
 
-     fun generateMockContactsForUser(userId: String, userDocument: DocumentSnapshot): List<Contact> {
-         val username = userDocument.getString(USERNAME) ?: "Unknown"
-         val photoUrl = userDocument.getString(PHOTO_URL) ?: ""
-         val email = userDocument.getString(EMAIL) ?: "$username@email.com"
-         val phoneNumber = userDocument.getString(PHONE_NUMBER) ?: "+000000000"
-         val contactCount = 10
-         return (1..contactCount).map { index ->
-             Contact(
-                 userId = "$userId-$index",
-                 username = "$username Contact $index",
-                 phoneNumber = phoneNumber,
-                 email = "$username.contact$index@example.com",
-                 photoUrl = photoUrl
-             )
-         }
-     }*/
 
     companion object {
         private const val CONTACTS_COLLECTION = "contacts"

@@ -220,6 +220,7 @@ class FirebaseAuthDataSource @Inject constructor(
             FieldType.USERNAME -> USERNAME
             FieldType.EMAIL -> EMAIL
             FieldType.PHONE_NUMBER -> PHONE_NUMBER
+
         }
 
         return firestore.collection(USERS)
@@ -239,7 +240,7 @@ class FirebaseAuthDataSource @Inject constructor(
                                     username = document.getString(USERNAME),
                                     email = document.getString(EMAIL),
                                     phoneNumber = document.getString(PHONE_NUMBER),
-                                    photoUrl = document.getString(PHOTO_URL)
+                                    photoUrl = document.getString(PHOTO_URL),
                                 )
                             )
                         }

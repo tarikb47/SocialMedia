@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.legacy.support.v4)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.database)
     ksp(libs.androidx.room.compiler)
 
     // Dagger Hilt

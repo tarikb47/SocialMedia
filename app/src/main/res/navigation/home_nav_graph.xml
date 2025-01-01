@@ -1,43 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/home_nav_graph"
-    app:startDestination="@id/nav_chats">
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/home_nav_graph"
+app:startDestination="@id/nav_chats">
+    <include app:graph="@navigation/nav_graph"/>
+    <action
+        android:id="@+id/action_edit_profile_to_login"
+        app:destination="@id/loginFragment"
+        app:popUpToInclusive="true"
+        app:popUpTo="@id/home_nav_graph" />
+<fragment
+    android:id="@+id/nav_chats"
+    android:name="com.example.hook.presentation.home.chats.ChatsFragment"
+    android:label="Chats"
+    tools:layout="@layout/fragment_chats" />
 
-    <fragment
-        android:id="@+id/nav_chats"
-        android:name="com.example.hook.presentation.home.chats.ChatsFragment"
-        android:label="Chats"
-        tools:layout="@layout/fragment_chats" />
+<fragment
+    android:id="@+id/nav_contacts"
+    android:name="com.example.hook.presentation.home.contacts.ContactsFragment"
+    android:label="Contacts"
+    tools:layout="@layout/fragment_contacts">
+    <action
+        android:id="@+id/action_nav_contacts_to_add_contact"
+        app:destination="@id/add_contact" />
+</fragment>
 
-    <fragment
-        android:id="@+id/nav_contacts"
-        android:name="com.example.hook.presentation.home.contacts.ContactsFragment"
-        android:label="Contacts"
-        tools:layout="@layout/fragment_contacts">
-        <action
-            android:id="@+id/action_nav_contacts_to_add_contact"
-            app:destination="@id/add_contact" />
-    </fragment>
+<fragment
+    android:id="@+id/nav_settings"
+    android:name="com.example.hook.presentation.home.settings.SettingsFragment"
+    android:label="Settings"
+    tools:layout="@layout/fragment_settings" >
+    <action android:id="@+id/action_nav_settings_to_edit_profile"
+        app:destination="@id/edit_profile"/>
+</fragment>
+<fragment
+    android:id="@+id/add_contact"
+    android:name="com.example.hook.presentation.home.contacts.addContact.AddContactFragment"
+    android:label="Add Contact"
+    tools:layout="@layout/fragment_add_contact" />
+<fragment
+    android:id="@+id/edit_profile"
+    android:name="com.example.hook.presentation.home.settings.editProfile.EditProfileFragment"
+    android:label="Edit Profile"
+    tools:layout="@layout/fragment_edit_profile">
 
-    <fragment
-        android:id="@+id/nav_settings"
-        android:name="com.example.hook.presentation.home.settings.SettingsFragment"
-        android:label="Settings"
-        tools:layout="@layout/fragment_settings" >
-        <action android:id="@+id/action_nav_settings_to_edit_profile"
-            app:destination="@id/edit_profile"/>
-    </fragment>
-    <fragment
-        android:id="@+id/add_contact"
-        android:name="com.example.hook.presentation.home.contacts.addContact.AddContactFragment"
-        android:label="Add Contact"
-        tools:layout="@layout/fragment_add_contact" />
-    <fragment
-        android:id="@+id/edit_profile"
-        android:name="com.example.hook.presentation.home.settings.editProfile.EditProfileFragment"
-        android:label="Edit Profile"
-        tools:layout="@layout/fragment_edit_profile"
-        />
-</navigation>
+</fragment></navigation>

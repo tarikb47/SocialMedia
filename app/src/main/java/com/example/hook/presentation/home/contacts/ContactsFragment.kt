@@ -11,17 +11,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.hook.R
 
 import com.example.hook.databinding.FragmentContactsBinding
 import com.example.hook.ui.contacts.ContactsViewModel
 import com.example.hook.ui.contacts.MixedAdapter
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ContactsFragment : Fragment() {
+    private lateinit var adapter: MixedAdapter
+    @Inject
+    lateinit var mixedAdapterFactory: MixedAdapterFactory
 
     private var _binding: FragmentContactsBinding? = null
     private val binding get() = _binding!!
@@ -43,8 +45,7 @@ class ContactsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Log.d("ChatsFragment", "ChatsFragment is displayed")
         layoutManager = LinearLayoutManager(requireContext())
-         val adapter = MixedAdapter(findNavController())
-
+        adapter = mixedAdapterFactory.create(findNavController(), viewLifecycleOwner.lifecycleScope)
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.adapter = adapter
 
