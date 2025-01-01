@@ -17,18 +17,15 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SplashFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = SplashFragment()
-    }
 
     private var _binding: FragmentSplashBinding? = null
     private val binding get() = _binding!!
     private val viewModel: SplashViewModel by viewModels()
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSplashBinding.inflate(inflater, container, false)
         return binding.root
@@ -40,11 +37,12 @@ class SplashFragment : Fragment() {
 
         lifecycleScope.launch {
             viewModel.splashState.collectLatest { initialized ->
-                if (initialized) {
-                    animateImageOut {
-                        navigateToOnboarding()
-                    }
+                when (initialized) {
+                    SplashState.Idle -> {}
+                    SplashState.UserLoggedIn -> animateImageOut { navigateToHome() }
+                    SplashState.UserNotLoggedIn -> animateImageOut { navigateToOnboarding() }
                 }
+
             }
         }
         viewModel.initializeApp()
@@ -52,7 +50,13 @@ class SplashFragment : Fragment() {
     }
 
     private fun navigateToOnboarding() {
+        findNavController().popBackStack()
         findNavController().navigate(R.id.action_splash_to_onboarding)
+    }
+
+    private fun navigateToHome() {
+        findNavController().popBackStack()
+        findNavController().navigate(R.id.action_splashFragment_to_main_nav_graph)
     }
 
     private fun animateImageIn() {
@@ -80,4 +84,6 @@ class SplashFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+
 }

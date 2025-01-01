@@ -8,21 +8,32 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.hook.R
+import com.example.hook.common.result.Result
+import com.example.hook.data.remote.home.contacts.UserActivityRepository
 import com.example.hook.databinding.ContactContainerBinding
 import com.example.hook.databinding.DropdownContactItemBinding
 import com.example.hook.presentation.home.contacts.ContactsViews
 import com.example.hook.presentation.home.contacts.RecyclerViewItem
+import kotlinx.coroutines.flow.collectLatest
+import com.google.firebase.Timestamp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class MixedAdapter(private val navController: NavController) :
-    ListAdapter<RecyclerViewItem, RecyclerView.ViewHolder>(ItemDiffCallback()) {
-
+class MixedAdapter(
+    private val navController: NavController,
+    private val userActivityRepository: UserActivityRepository,
+    private val scope: CoroutineScope
+) : ListAdapter<RecyclerViewItem, RecyclerView.ViewHolder>(ItemDiffCallback()) {
 
     var isMenuVisible = false
+
     fun showMenu() {
         if (!isMenuVisible) {
             isMenuVisible = true
-            val currentList =
-                menuItems + currentList.filterIsInstance<RecyclerViewItem.ContactItem>()
+            val currentList = menuItems + currentList.filterIsInstance<RecyclerViewItem.ContactItem>()
             submitList(currentList)
         }
     }
@@ -47,7 +58,7 @@ class MixedAdapter(private val navController: NavController) :
         return when (ContactsViews.values()[viewType]) {
             ContactsViews.CONTACT -> {
                 val binding = ContactContainerBinding.inflate(inflater, parent, false)
-                ContactViewHolder(binding)
+                ContactViewHolder(binding, userActivityRepository, scope)
             }
 
             ContactsViews.MENU -> {
@@ -57,7 +68,6 @@ class MixedAdapter(private val navController: NavController) :
         }
     }
 
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = getItem(position)) {
             is RecyclerViewItem.ContactItem -> (holder as ContactViewHolder).bind(item)
@@ -65,8 +75,12 @@ class MixedAdapter(private val navController: NavController) :
         }
     }
 
-    class ContactViewHolder(private val binding: ContactContainerBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    class ContactViewHolder(
+        private val binding: ContactContainerBinding,
+        private val userActivityRepository: UserActivityRepository,
+        private val scope: CoroutineScope
+    ) : RecyclerView.ViewHolder(binding.root) {
+
         fun bind(contact: RecyclerViewItem.ContactItem) {
             binding.contact = contact.contact
             Glide.with(binding.imageProfile.context)
@@ -74,47 +88,56 @@ class MixedAdapter(private val navController: NavController) :
                 .placeholder(R.drawable.add_new_icon)
                 .circleCrop()
                 .into(binding.imageProfile)
+
+            scope.launch {
+                userActivityRepository.observeUserStatus(contact.contact.userId).collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val activityStatus = result.data
+                            binding.activityStatus.text = when (activityStatus) {
+                                true -> "Online"
+                                is Timestamp -> "Last active: ${formatTimestamp(activityStatus)}"
+                                else -> activityStatus.toString()
+                            }
+                        }
+                        is Result.Error -> {
+                            binding.activityStatus.text = "Unknown"
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun formatTimestamp(timestamp: Timestamp): String {
+            val millis = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
+            val date = Date(millis)
+            val formatter = SimpleDateFormat("hh:mm a, MMM dd", Locale.getDefault())
+            return formatter.format(date)
         }
     }
 
-    class MenuViewHolder(
-        private val binding: DropdownContactItemBinding
-    ) :
+    class MenuViewHolder(private val binding: DropdownContactItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(menuItem: RecyclerViewItem.MenuItem, navController: NavController) {
             binding.menuText.text = menuItem.title
             binding.menuIcon.setImageResource(menuItem.iconResId)
             binding.root.setOnClickListener {
                 when (menuItem.title) {
-                    "Find People Nearby" -> {
-                    }
-
-                    "Invite Friends" -> {
-                    }
-
-                    "Contact Categories" -> {
-                    }
-
-                    "Add New Contact" -> {
-                        navController.navigate(R.id.action_nav_contacts_to_add_contact)
-                    }
+                    "Find People Nearby" -> { /* Navigate or handle click */ }
+                    "Invite Friends" -> { /* Navigate or handle click */ }
+                    "Contact Categories" -> { /* Navigate or handle click */ }
+                    "Add New Contact" -> navController.navigate(R.id.action_nav_contacts_to_add_contact)
                 }
             }
         }
     }
 
     private class ItemDiffCallback : DiffUtil.ItemCallback<RecyclerViewItem>() {
-        override fun areItemsTheSame(
-            oldItem: RecyclerViewItem,
-            newItem: RecyclerViewItem
-        ): Boolean {
+        override fun areItemsTheSame(oldItem: RecyclerViewItem, newItem: RecyclerViewItem): Boolean {
             return oldItem == newItem
         }
 
-        override fun areContentsTheSame(
-            oldItem: RecyclerViewItem,
-            newItem: RecyclerViewItem
-        ): Boolean {
+        override fun areContentsTheSame(oldItem: RecyclerViewItem, newItem: RecyclerViewItem): Boolean {
             return oldItem == newItem
         }
     }

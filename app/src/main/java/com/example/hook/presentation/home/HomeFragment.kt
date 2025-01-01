@@ -6,18 +6,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.hook.R
 import com.example.hook.databinding.FragmentHomeBinding
+import com.example.hook.ui.contacts.ContactsViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import kotlin.math.log
 
+@AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: HomeFragmentViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,6 +55,7 @@ class HomeFragment : Fragment() {
                 R.id.add_contact -> {
                     binding.navigation.visibility = View.GONE
                 }
+
                 else -> {
                     binding.navigation.visibility = View.VISIBLE
                 }
@@ -54,6 +63,22 @@ class HomeFragment : Fragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.setUserOnline()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.setUserOffline()
+
+    }
+
+    /*override fun onStop() {
+        super.onStop()
+        viewModel.setUserOffline()
+    }
+*/
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

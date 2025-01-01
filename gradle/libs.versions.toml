@@ -22,6 +22,7 @@ firebaseFirestore = "25.1.1"
 fragmentKtx = "1.8.5"
 timber = "5.0.0"
 firebaseStorage = "21.0.1"
+firebaseDatabase = "21.0.0"
 
 
 
@@ -50,6 +51,7 @@ androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", ve
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
