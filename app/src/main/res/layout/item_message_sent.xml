@@ -1,9 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:layout_margin="8dp"
-
     android:gravity="end">
 
     <TextView
@@ -15,7 +14,7 @@
         android:textColor="@color/black"
         android:padding="8dp"
         android:background="@color/message_sent_bg"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="@dimen/space_xxxs" />
 
     <TextView
         android:id="@+id/messageTimestamp"
@@ -23,6 +22,6 @@
         android:layout_height="wrap_content"
         android:text="18:23"
         android:layout_marginStart="@dimen/space_s"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_body_3"
         android:textColor="@color/black" />
 </LinearLayout>

@@ -14,7 +14,6 @@ import com.example.hook.common.result.Result
 import com.example.hook.data.local.UserRepositoryImpl
 import com.example.hook.data.remote.home.contacts.ContactsRepository
 import com.example.hook.domain.model.Chat
-import com.example.hook.presentation.home.chats.allchats.chat.MessageState
 import kotlinx.coroutines.Dispatchers
 
 @HiltViewModel

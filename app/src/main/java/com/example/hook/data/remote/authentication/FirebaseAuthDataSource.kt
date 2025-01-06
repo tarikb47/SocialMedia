@@ -215,6 +215,7 @@ class FirebaseAuthDataSource @Inject constructor(
 
         is Result.Error -> flowOf(Result.Error(UserNotLoggedInException()))
     }
+
     fun getContactByField(fieldValue: String, fieldType: FieldType): Flow<Result<Contact>> {
         val fieldName: String = when (fieldType) {
             FieldType.USERNAME -> USERNAME
@@ -245,45 +246,11 @@ class FirebaseAuthDataSource @Inject constructor(
                             )
                         }
                     }
+
                     is Result.Error -> Result.Error(result.error)
                 }
             }
     }
-   /* fun getContactByField(fieldValue: String, fieldType: FieldType): Flow<Result<Contact>> {
-        val fieldName: String = when (fieldType) {
-            FieldType.USERNAME -> USERNAME
-            FieldType.EMAIL -> EMAIL
-            FieldType.PHONE_NUMBER -> PHONE_NUMBER
-        }
-
-        return firestore.collection(USERS)
-            .whereEqualTo(fieldName, fieldValue)
-            .get()
-            .asFlow()
-            .mapSuccess { querySnapshot ->
-                val document = querySnapshot.documents.firstOrNull()
-                if (document == null){
-                    throw UnregisteredUserException()
-                }
-                else {
-                    Contact(
-                        userId = document.id,
-                        username = document.getString(USERNAME),
-                        email = document.getString(EMAIL),
-                        phoneNumber = document.getString(PHONE_NUMBER),
-                        photoUrl = document.getString(PHOTO_URL)
-                    )
-                }
-            }
-            .mapError { error ->
-                when (error) {
-                    is UnregisteredUserException -> error
-                    else -> UnexpectedErrorException()
-                }
-            }
-    }*/
-
-
 
     fun sendPasswordResetEmail(email: String): Flow<Result<Unit>> =
         auth.sendPasswordResetEmail(email).asFlow().mapSuccess { (Unit) }
@@ -305,7 +272,7 @@ class FirebaseAuthDataSource @Inject constructor(
     }
 
     companion object {
-        private const val USERS = "users"
+        private const val USERS = "Users"
         private const val USERNAME = "username"
         private const val PHONE_NUMBER = "phoneNumber"
         private const val FIREBASE_TOKEN = "firebaseToken"

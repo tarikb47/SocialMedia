@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.hook.R
 import com.example.hook.databinding.FragmentAllChatsBinding
@@ -15,20 +17,18 @@ import com.example.hook.presentation.home.chats.adapters.ChatsRecyclerAdapter
 import com.example.hook.domain.model.Chat
 import com.example.hook.presentation.home.chats.allchats.AllChatsViewModel.ChatsState
 import dagger.hilt.android.AndroidEntryPoint
+import hilt_aggregated_deps._com_example_hook_presentation_home_chats_allchats_AllChatsFragment_GeneratedInjector
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AllChatsFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = AllChatsFragment()
-    }
 
     private var _binding: FragmentAllChatsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: AllChatsViewModel by viewModels()
-    private var adapter = ChatsRecyclerAdapter()
+    private var adapter : ChatsRecyclerAdapter? = null
     private lateinit var currentUser : String
 
     override fun onCreateView(
@@ -42,6 +42,13 @@ class AllChatsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.getCurrentUserVid()
+        adapter = ChatsRecyclerAdapter { chat ->
+            val contactId = chat.users.firstOrNull {it != currentUser }
+            if (contactId != null) {
+                val action = AllChatsFragmentDirections.actionAllChatsToDirectChat(contactId )
+                findNavController().navigate(action)
+            }
+        }
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
         lifecycleScope.launch {
@@ -58,7 +65,7 @@ class AllChatsFragment : Fragment() {
                     }
 
                     is ChatsState.UpdatedChats -> {
-                        adapter.updateChats(state.chats)
+                        adapter!!.updateChats(state.chats)
                     }
 
                     is ChatsState.CurrentUserId -> {currentUser = state.userId

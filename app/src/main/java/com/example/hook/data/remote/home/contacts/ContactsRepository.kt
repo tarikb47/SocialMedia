@@ -110,8 +110,8 @@ class ContactsRepository @Inject constructor(
 
     companion object {
         private const val CONTACTS_COLLECTION = "contacts"
-        private const val USERS_COLLECTION = "users"
-        private const val USERNAME = "username"
+        private const val USERS_COLLECTION = "Users"
+        private const val USERNAME = "firstName"
         private const val PHONE_NUMBER = "phoneNumber"
         private const val EMAIL = "email"
         private const val PHOTO_URL = "photoUrl"

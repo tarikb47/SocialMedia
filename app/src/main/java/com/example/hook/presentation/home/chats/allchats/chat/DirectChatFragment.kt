@@ -27,7 +27,7 @@ class DirectChatFragment : Fragment() {
     private val viewModel: DirectChatViewModel by viewModels()
     private val args: DirectChatFragmentArgs by navArgs()
     private val contact: String by lazy { args.contactId }
-    private lateinit var currentUser : String
+    private lateinit var currentUser: String
     private lateinit var messagesAdapter: MessagesAdapter
 
     override fun onCreateView(
@@ -50,10 +50,6 @@ class DirectChatFragment : Fragment() {
             v.updatePadding(
                 bottom = imeInsets.bottom.coerceAtLeast(systemBarsInsets.bottom)
             )
-            if (imeInsets.bottom > 0) {
-                binding.messagesRv.scrollToPosition(binding.messagesRv.adapter?.itemCount?.minus(1) ?: 0)
-            }
-
             WindowInsetsCompat.CONSUMED
         }
     }
@@ -65,8 +61,14 @@ class DirectChatFragment : Fragment() {
                 val newMessage = Message(
                     text = message,
                     senderId = currentUser,
-                    timestamp = System.currentTimeMillis())
-                viewModel.sendMessage(listOf(currentUser,contact),newMessage)
+                    timestamp = System.currentTimeMillis()
+                )
+                viewModel.sendMessage(
+                    listOf(currentUser, contact),
+                    newMessage,
+                    currentUser,
+                    contact
+                )
                 binding.messageInput.text.clear()
             }
 
@@ -77,20 +79,23 @@ class DirectChatFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.messageState.collectLatest { state ->
                 when (state) {
-                    is MessageState.CurrentUserId ->{ currentUser = state.userId
+                    is MessageState.CurrentUserId -> {
+                        currentUser = state.userId
                         messagesAdapter = MessagesAdapter(currentUser)
                         val layoutManager = LinearLayoutManager(requireContext())
-                        layoutManager.reverseLayout = true
                         binding.messagesRv.layoutManager = layoutManager
-                        viewModel.fetchMessages(currentUser,contact)
                         binding.messagesRv.adapter = messagesAdapter
-                        viewModel.listenForNewMessages(currentUser,contact)
-
+                        viewModel.listenForNewMessages(currentUser, contact)
+                        viewModel.fetchMessages(currentUser, contact)
                     }
+
                     is MessageState.Error -> {}
                     MessageState.Initial -> {}
                     MessageState.Loading -> {}
-                    MessageState.MessageSent -> {}
+                    MessageState.MessageSent -> {
+                        binding.messagesRv.scrollToPosition(messagesAdapter.itemCount - 1)
+                    }
+
                     is MessageState.MessagesLoaded -> {
                         Log.d("Tarik", "Received messages: ${state.messages}")
                         updateMessages(state.messages)
@@ -101,14 +106,19 @@ class DirectChatFragment : Fragment() {
 
         }
     }
+
     private fun updateMessages(messages: List<Message>) {
-        messagesAdapter.submitList(messages)
-        if (messages.isNotEmpty()) {
-            binding.messagesRv.post {
-                binding.messagesRv.scrollToPosition(messages.size - 1)
-            }        }
+        messagesAdapter.submitList(messages) {
+            if (messages.isNotEmpty()) {
+                binding.messagesRv.post {
+                    val layoutManager = binding.messagesRv.layoutManager as LinearLayoutManager
+                    Log.d("Tarik", "RecyclerView size: ${binding.messagesRv.adapter?.itemCount}")
+                    layoutManager.scrollToPositionWithOffset(messages.size - 1, 0)
+                    Log.d("Tarik", "Scrolling to position: ${messages.size - 1}")
+                }
+            }
+        }
     }
-
-
-
 }
+
+

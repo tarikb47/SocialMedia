@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class MessagesRepository @Inject constructor(
@@ -39,39 +40,56 @@ class MessagesRepository @Inject constructor(
 ) {
     fun sendMessage(
         users: List<String>,
-        message: Message
-    ): Flow<Result<Unit>> {
-        val chatId = users.sorted().joinToString("-")
-        Log.d("MessagesRepository", "Chat ID generated: $chatId")
-        val chatRef = firestore.collection("chats").document(chatId)
+        message: Message,
+        userId: String,
+        contact: String
+    ): Flow<Result<Unit>> = flow {
+        val chatQuery = firestore.collection("Chats")
+            .whereArrayContains("users", userId)
+            .get()
+            .await()
 
-        return chatRef.get().asFlow()
-            .flatMapLatest { result ->
-                if (result is Result.Success) {
-                    val documentSnapshot = result.data
-                    if (documentSnapshot.exists()) {
-                        Log.d("MessagesRepository", "Chat already exists, sending message")
-                        sendExistingMessage(chatRef, message)
-                    } else {
-                        Log.d("MessagesRepository", "Chat does not exist, creating a new chat")
-                        createNewChat(users, message, chatRef)
-                    }
-                } else {
-                    flowOf(Result.Error(Exception("Error checking chat existence.")))
-                }
-            }
-            .catch { e ->
-                Log.e("MessagesRepository", "Error in sendMessage: ${e.message}")
-                emit(Result.Error(e))
-            }
+        val chatDocument = chatQuery.documents.firstOrNull { doc ->
+            val chatUsers = doc.get("users") as? List<String>
+            chatUsers?.contains(contact) == true
+        }
+
+        val chatRef = if (chatDocument != null) {
+            firestore.collection("Chats").document(chatDocument.id)
+        } else {
+            val newChatRef = firestore.collection("Chats").document()
+            val chatData = mapOf(
+                "chatId" to newChatRef.id,
+                "users" to users,
+                "lastMessage" to message.text,
+                "timestamp" to message.timestamp,
+            )
+            newChatRef.set(chatData, SetOptions.merge()).await()
+            newChatRef
+        }
+
+        chatRef.collection("Messages").add(message).await()
+
+        val chatData = mapOf(
+            "lastMessage" to message.text,
+            "timestamp" to message.timestamp,
+        )
+        chatRef.set(chatData, SetOptions.merge()).await()
+
+        emit(Result.Success(Unit))
+    }.catch { e ->
+        e
     }
+
+
+
 
     fun sendExistingMessage(
         chatRef: DocumentReference,
         message: Message
     ): Flow<Result<Unit>> {
         Log.d("MessagesRepository", "Sending message to existing chat")
-        return chatRef.collection("messages").add(message).asFlow()
+        return chatRef.collection("Messages").add(message).asFlow()
             .flatMapLatest {
                 val chatData = mapOf(
                     "lastMessage" to message.text,
@@ -94,33 +112,23 @@ class MessagesRepository @Inject constructor(
         message: Message,
         chatRef: DocumentReference
     ): Flow<Result<Unit>> {
-        Log.d("MessagesRepository", "Creating new chat")
-        val otherUserId = users.first { it != message.senderId }
-
-        return firestore.collection("users").document(otherUserId).get().asFlow()
-            .flatMapLatest { result ->
-                if (result is Result.Success) {
-                    val chatData = mapOf(
-                        "users" to users,
-                        "lastMessage" to message.text,
-                        "timestamp" to message.timestamp,
-                    )
-                    chatRef.set(chatData, SetOptions.merge()).asFlow()
-                        .flatMapLatest {
-                            sendExistingMessage(chatRef, message)
-                        }
-                } else {
-                    flowOf(Result.Error(Exception("Error fetching user profile.")))
-                }
+        val chatData = mapOf(
+            "chatId" to chatRef.id,
+            "users" to users,
+            "lastMessage" to message.text,
+            "timestamp" to message.timestamp,
+        )
+        return chatRef.set(chatData, SetOptions.merge()).asFlow()
+            .flatMapLatest {
+                sendExistingMessage(chatRef, message)
             }
             .catch { e ->
-                Log.e("MessagesRepository", "Error creating new chat: ${e.message}")
                 emit(Result.Error(e))
             }
     }
 
     fun retrieveChats(userId: String): Flow<Result<List<Chat>>> {
-        return firestore.collection("chats")
+        return firestore.collection("Chats")
             .whereArrayContains("users", userId)
             .get().asFlow()
             .mapSuccess { querySnapshot ->
@@ -135,7 +143,7 @@ class MessagesRepository @Inject constructor(
     }
 
     fun getChatDetails(userId: String): Flow<Result<UserProfile>> {
-        return firestore.collection("users").document(userId).get().asFlow()
+        return firestore.collection("Users").document(userId).get().asFlow()
             .mapSuccess { documentSnapshot ->
                 val userProfile = documentSnapshot.toObject(UserProfile::class.java)
                 userProfile!!
@@ -187,46 +195,99 @@ class MessagesRepository @Inject constructor(
             }
     }
 
-    fun fetchMessages(chatId: String): Flow<Result<List<Message>>> {
-        return firestore.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .orderBy("timestamp")
+    fun fetchMessages(currentUser: String, contact: String): Flow<Result<List<Message>>> {
+        return firestore.collection("Chats")
+            .whereArrayContains("users", currentUser)
             .get()
             .asFlow()
-            .mapSuccess { snapshot ->
-                if (!snapshot.isEmpty) {
-                    val messages = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Message::class.java)
+            .flatMapLatest { result ->
+                if (result is Result.Success) {
+                    val querySnapshot = result.data
+                    val chatDocument = querySnapshot.documents.firstOrNull { doc ->
+                        val users = doc.get("users") as? List<String>
+                        users?.contains(contact) == true
                     }
-                    messages
+
+                    if (chatDocument != null) {
+                        val chatId = chatDocument.id
+                        firestore.collection("Chats")
+                            .document(chatId)
+                            .collection("Messages")
+                            .orderBy("timestamp", Query.Direction.ASCENDING)
+                            .get()
+                            .asFlow()
+                            .mapSuccess { snapshot ->
+                                snapshot.documents.mapNotNull { doc ->
+                                    doc.toObject(Message::class.java)
+                                }
+                            }
+                    } else {
+                        flowOf(Result.Success(emptyList()))
+                    }
                 } else {
-                    error("")
+                    flowOf(Result.Error(Exception("Error retrieving chats for the user.")))
                 }
+            }
+            .catch { e ->
+                Log.e("MessagesRepository", "Error fetching messages: ${e.message}")
+                emit(Result.Error(e))
             }
     }
 
-    fun listenForNewMessages(chatId: String): Flow<Result<Message>> {
+    fun listenForNewMessages(userId: String, contact: String): Flow<Result<List<Message>>> {
         return callbackFlow {
-            val listenerRegistration = firestore.collection("chats")
-                .document(chatId)
-                .collection("messages")
-                .orderBy("timestamp")
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        trySend(Result.Error(error)) // Send error if snapshot listener fails
-                    } else if (snapshot != null) {
-                        snapshot.documentChanges.forEach { docChange ->
-                            if (docChange.type == com.google.firebase.firestore.DocumentChange.Type.ADDED) {
-                                val message = docChange.document.toObject(Message::class.java)
-                                message.let {
-                                    trySend(Result.Success(it))
-                                }
+            val closeableListeners = mutableListOf<() -> Unit>()
+            var registeredChatId: String? = null
+
+            val chatQuery = firestore.collection("Chats")
+                .whereArrayContains("users", userId)
+
+            val queryRegistration = chatQuery.addSnapshotListener { querySnapshot, error ->
+                if (error != null) {
+                    trySend(Result.Error(error))
+                    return@addSnapshotListener
+                }
+
+                val chatDocument = querySnapshot?.documents?.firstOrNull { doc ->
+                    val users = doc.get("users") as? List<String>
+                    users?.contains(contact) == true
+                }
+
+                if (chatDocument != null) {
+                    val chatId = chatDocument.id
+
+                    if (chatId == registeredChatId) {
+                        return@addSnapshotListener
+                    }
+
+                    registeredChatId = chatId
+
+                    val listenerRegistration = firestore.collection("Chats")
+                        .document(chatId)
+                        .collection("Messages")
+                        .orderBy("timestamp", Query.Direction.ASCENDING)
+                        .addSnapshotListener { snapshot, messageError ->
+                            if (messageError != null) {
+                                trySend(Result.Error(messageError))
+                            } else {
+                                val messages = snapshot?.documents?.mapNotNull { doc ->
+                                    doc.toObject(Message::class.java)
+                                } ?: emptyList()
+                                trySend(Result.Success(messages))
                             }
                         }
-                    }
+
+                    closeableListeners.add { listenerRegistration.remove() }
+                } else {
+                    trySend(Result.Error(Exception("No chat found between $userId and $contact")))
                 }
-            awaitClose { listenerRegistration.remove() }
+            }
+
+            closeableListeners.add { queryRegistration.remove() }
+
+            awaitClose {
+                closeableListeners.forEach { it.invoke() }
+            }
         }
     }
 

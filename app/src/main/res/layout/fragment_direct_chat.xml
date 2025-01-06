@@ -77,24 +77,18 @@
         app:layout_constraintTop_toTopOf="@id/back"
         app:layout_constraintEnd_toEndOf="parent"
        />
-    <androidx.core.widget.NestedScrollView
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messages_rv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:padding="8dp"
+        android:background="@color/divider_grey"
         android:layout_marginTop="@dimen/space_xs"
         app:layout_constraintBottom_toTopOf="@id/message_input_layout"
         app:layout_constraintTop_toBottomOf="@id/image_profile"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:background="@color/hook_blue"
-        >
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/messages_rv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-             />
-    </androidx.core.widget.NestedScrollView>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 
     <LinearLayout

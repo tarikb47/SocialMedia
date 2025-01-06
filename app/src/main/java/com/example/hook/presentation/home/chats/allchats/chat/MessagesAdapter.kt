@@ -35,15 +35,12 @@ class MessagesAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        Log.d("MessagesAdapter", "onBindViewHolder called for position: $position")
         val message = getItem(position)
         when (holder) {
             is SentMessageViewHolder -> {
-                Log.d("MessagesAdapter", "Binding SentMessageViewHolder for position $position")
                 holder.bind(message)
             }
             is ReceivedMessageViewHolder -> {
-                Log.d("MessagesAdapter", "Binding ReceivedMessageViewHolder for position $position")
                 holder.bind(message)
             }
         }
@@ -59,7 +56,6 @@ class MessagesAdapter(
         private val messageTimestamp: TextView = itemView.findViewById(R.id.messageTimestamp)
 
         fun bind(message: Message) {
-            Log.d("MessagesAdapter", "SentMessageViewHolder.bind called for message: ${message.text}, Timestamp: ${message.timestamp}")
             messageText.text = message.text
             messageTimestamp.text = formatTimestamp(message.timestamp)
         }
@@ -70,7 +66,6 @@ class MessagesAdapter(
         private val messageTimestamp: TextView = itemView.findViewById(R.id.messageTimestamp)
 
         fun bind(message: Message) {
-            Log.d("MessagesAdapter", "ReceivedMessageViewHolder.bind called for message: ${message.text}, Timestamp: ${message.timestamp}")
             messageText.text = message.text
             messageTimestamp.text = formatTimestamp(message.timestamp)
         }
@@ -78,7 +73,6 @@ class MessagesAdapter(
 
     private fun formatTimestamp(timestamp: Long): String {
         val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-        Log.d("MessagesAdapter", "Timestamp formatted: $timestamp -> $formattedTime")
         return formattedTime
     }
 
@@ -87,16 +81,18 @@ class MessagesAdapter(
         private const val VIEW_TYPE_RECEIVED = 1
     }
 
-    // DiffUtil callback for Message items
     class MessageDiffCallback : DiffUtil.ItemCallback<Message>() {
         override fun areItemsTheSame(oldItem: Message, newItem: Message): Boolean {
-            // Check if items are the same (e.g., check by unique ID or timestamp)
-            return oldItem.timestamp == newItem.timestamp
+            return oldItem.timestamp== newItem.timestamp
         }
 
         override fun areContentsTheSame(oldItem: Message, newItem: Message): Boolean {
-            // Check if the contents of the messages are the same
             return oldItem == newItem
         }
+    }
+    fun submitMessages(newMessages: List<Message>) {
+        val updatedList = currentList.toMutableList()
+        updatedList.addAll(newMessages.filter { it !in currentList })
+        submitList(updatedList.sortedBy { it.timestamp })
     }
 }

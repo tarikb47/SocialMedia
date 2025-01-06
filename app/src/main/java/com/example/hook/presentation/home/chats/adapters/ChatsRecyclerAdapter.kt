@@ -2,15 +2,17 @@ package com.example.hook.presentation.home.chats.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.hook.R
 import com.example.hook.databinding.ChatsContainerBinding
 import com.example.hook.domain.model.Chat
 import com.example.hook.presentation.authentication.helpers.TimeFormater
-import java.sql.Time
 
-class ChatsRecyclerAdapter : RecyclerView.Adapter<ChatsRecyclerAdapter.ChatViewHolder>() {
+class ChatsRecyclerAdapter(        private val onChatClicked: (Chat) -> Unit
+
+) : RecyclerView.Adapter<ChatsRecyclerAdapter.ChatViewHolder>() {
     private val timeFormater = TimeFormater()
     private var chats: List<Chat> = emptyList()
     inner class ChatViewHolder(private val binding: ChatsContainerBinding) :
@@ -25,7 +27,12 @@ class ChatsRecyclerAdapter : RecyclerView.Adapter<ChatsRecyclerAdapter.ChatViewH
                 .placeholder(R.drawable.add_new_icon)
                 .error(R.drawable.add_new_icon)
                 .into(binding.imageProfile)
+            binding.root.setOnClickListener{
+                onChatClicked(chat)
+            }
         }
+
+
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
         val binding = ChatsContainerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,7 +44,7 @@ class ChatsRecyclerAdapter : RecyclerView.Adapter<ChatsRecyclerAdapter.ChatViewH
     }
     fun updateChats(updatedChats: List<Chat>) {
         this.chats = updatedChats
-        notifyDataSetChanged() // Notify the adapter that data has changed
+        notifyDataSetChanged()
     }
     override fun getItemCount(): Int = chats.size
 }

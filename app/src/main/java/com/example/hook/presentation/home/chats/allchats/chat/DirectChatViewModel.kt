@@ -21,9 +21,9 @@ class DirectChatViewModel @Inject constructor(private val directChatRepo : Messa
     private val _messageState: MutableStateFlow<MessageState> =
         MutableStateFlow(MessageState.Initial)
     val messageState = _messageState.asStateFlow()
-    fun sendMessage( users: List<String>, message: Message) {
+    fun sendMessage( users: List<String>, message: Message, user : String, contact: String) {
         viewModelScope.launch {
-            directChatRepo.sendMessage(users, message)
+            directChatRepo.sendMessage(users, message, user, contact)
                 .collectLatest { result ->
                     when (result) {
                         is Result.Error -> {_messageState.value = MessageState.Error(result.error)
@@ -46,9 +46,8 @@ class DirectChatViewModel @Inject constructor(private val directChatRepo : Messa
     }
     fun fetchMessages(currentUser: String, contact: String) {
         viewModelScope.launch {
-            val chatId = listOf(currentUser, contact).sorted().joinToString("-")
 
-            directChatRepo.fetchMessages(chatId).collectLatest { result ->
+            directChatRepo.fetchMessages(currentUser,contact).collectLatest { result ->
                 when (result) {
                     is Result.Error -> {
                         _messageState.value = MessageState.Error(result.error)
@@ -62,12 +61,12 @@ class DirectChatViewModel @Inject constructor(private val directChatRepo : Messa
     }
     fun listenForNewMessages(currentUser: String, contactId: String) {
         viewModelScope.launch {
-            val chatId = listOf(currentUser, contactId).sorted().joinToString("-")
-            directChatRepo.listenForNewMessages(chatId).collectLatest { result ->
+            directChatRepo.listenForNewMessages(currentUser, contactId).collectLatest { result ->
                 when (result) {
                     is Result.Success -> {
                         val currentMessages = (_messageState.value as? MessageState.MessagesLoaded)?.messages ?: emptyList()
-                        val updatedMessages = currentMessages.toMutableList().apply { add(result.data) }
+                        val updatedMessages = (currentMessages + result.data).distinctBy { it.timestamp }
+                            .sortedBy { it.timestamp }
                         _messageState.value = MessageState.MessagesLoaded(updatedMessages)
                     }
                     is Result.Error -> _messageState.value = MessageState.Error(result.error)
@@ -75,4 +74,6 @@ class DirectChatViewModel @Inject constructor(private val directChatRepo : Messa
             }
         }
     }
+
+
 }
