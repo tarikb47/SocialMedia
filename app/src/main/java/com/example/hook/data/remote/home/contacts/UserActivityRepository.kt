@@ -5,10 +5,6 @@ import com.example.hook.common.ext.asFlow
 import com.example.hook.common.ext.mapError
 import com.example.hook.common.ext.mapSuccess
 import com.example.hook.common.result.Result
-import com.example.hook.data.local.dao.ContactDao
-import com.example.hook.data.remote.authentication.FirebaseAuthDataSource
-import com.example.hook.domain.model.UserActivity
-import com.example.hook.domain.repository.UserRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -17,7 +13,6 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -26,32 +21,15 @@ import javax.inject.Inject
 
 class UserActivityRepository @Inject constructor(
     private val database: FirebaseDatabase,
-     auth: FirebaseAuth,
+     private val auth: FirebaseAuth,
 ) {
 
-    private val currentUser = auth.currentUser/* fun setUserActivityStatus(isActive: Boolean) {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            val userId = currentUser.uid
-            val myRef = database.getReference("users").child(userId)
-            val activityMap = mapOf(
-                "isActive" to isActive,
-                "lastActive" to System.currentTimeMillis()
-            )
-            myRef.updateChildren(activityMap)
-                .addOnSuccessListener {
-                }
-                .addOnFailureListener { error ->
-                }
-        } else {
-        }
-    }*/
-
+    private val currentUser
+        get() = auth.currentUser
     private val userStatusRef: DatabaseReference
         get() = database.getReference("status")
 
     fun userOnline(): Flow<Result<Unit>> = currentUser?.let { user ->
-        Log.d("Tarik", "Attempting to set user online")
         val statusRef = userStatusRef.child(user.uid)
         statusRef.setValue(
             mapOf(

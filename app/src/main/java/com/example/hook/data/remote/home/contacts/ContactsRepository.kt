@@ -52,10 +52,6 @@ class ContactsRepository @Inject constructor(
             .get()
             .asFlow()
             .mapSuccess { querySnapshot ->
-                Log.d("Tarik", "Query snapshot size: ${querySnapshot.size()}")
-                querySnapshot.documents.forEach { document ->
-                    Log.d("Tarik", "Document: ${document.id}, Data: ${document.data}")
-                }
                 querySnapshot.documents.map { document ->
                     Contact(
                         userId = document.id,

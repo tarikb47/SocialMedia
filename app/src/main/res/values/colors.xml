@@ -17,4 +17,5 @@
     <color name="chats_grey">#EDEDED</color>
     <color name="chats_tabs_grey">#838383</color>
     <color name="bottom_nav_grey">#49454F</color>
+    <color name="message_sent_bg">#EFFEDD</color>
 </resources>

@@ -55,6 +55,9 @@ class HomeFragment : Fragment() {
                 R.id.add_contact -> {
                     binding.navigation.visibility = View.GONE
                 }
+                R.id.direct_chat ->{
+                    binding.navigation.visibility = View.GONE
+                }
 
                 else -> {
                     binding.navigation.visibility = View.VISIBLE
