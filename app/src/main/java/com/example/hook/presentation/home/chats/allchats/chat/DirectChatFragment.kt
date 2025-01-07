@@ -13,6 +13,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.hook.databinding.FragmentDirectChatBinding
 import com.example.hook.domain.model.Message
 import dagger.hilt.android.AndroidEntryPoint
@@ -87,6 +88,8 @@ class DirectChatFragment : Fragment() {
                         binding.messagesRv.adapter = messagesAdapter
                         viewModel.listenForNewMessages(currentUser, contact)
                         viewModel.fetchMessages(currentUser, contact)
+                        viewModel.getChatDetails(contact)
+                        viewModel.observeActivity(contact)
                     }
 
                     is MessageState.Error -> {}
@@ -97,8 +100,19 @@ class DirectChatFragment : Fragment() {
                     }
 
                     is MessageState.MessagesLoaded -> {
-                        Log.d("Tarik", "Received messages: ${state.messages}")
                         updateMessages(state.messages)
+                    }
+
+                    is MessageState.ContactDetailsFetched -> {
+                        Glide.with(requireContext())
+                            .load(state.userProfile.photoUrl)
+                            .circleCrop()
+                            .into(binding.imageProfile)
+                        binding.username.text = state.userProfile.username
+                    }
+
+                    is MessageState.UserActivityStatus -> {
+                        binding.ativity.text = state.status
                     }
                 }
             }

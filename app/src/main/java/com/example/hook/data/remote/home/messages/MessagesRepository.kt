@@ -153,6 +153,7 @@ class MessagesRepository @Inject constructor(
             }
     }
 
+
     fun retrieveChatsWithDetails(userId: String): Flow<Result<List<Chat>>> {
         return retrieveChats(userId)
             .flatMapLatest { result ->

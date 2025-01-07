@@ -24,7 +24,7 @@
         android:layout_width="@dimen/image_m"
         android:layout_height="@dimen/image_m"
         android:scaleType="centerCrop"
-        android:layout_marginTop="@dimen/space_xxl"
+        android:layout_marginTop="@dimen/space_xxxl"
         android:layout_marginBottom="@dimen/space_m"
         android:layout_marginStart="@dimen/space_s"
         app:layout_constraintStart_toEndOf="@id/back"
@@ -39,7 +39,6 @@
         android:id="@+id/username"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@{user.username}"
         android:textSize="@dimen/text_size_h5"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@id/image_profile"
@@ -114,20 +113,20 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@color/white"
-
             android:layout_weight="1"
             android:hint="@string/write_message"
             android:padding="@dimen/space_xs"
             android:layout_marginEnd="8dp"
-            android:imeOptions="actionSend"
-            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:inputType="textMultiLine"
+            android:maxLines="4"
             android:textColor="@color/black" />
 
         <ImageView
             android:layout_width="@dimen/image_xxs"
             android:layout_height="@dimen/image_xxs"
             android:src="@drawable/ic_attach"
-            android:layout_marginEnd="@dimen/space_xxs"
+            android:layout_marginEnd="@dimen/space_s"
             android:layout_gravity="center_vertical"
             />
         <ImageButton
@@ -135,6 +134,7 @@
             android:layout_width="@dimen/image_xxs"
             android:layout_height="@dimen/image_xxs"
             android:src="@drawable/ic_back"
+            android:layout_marginEnd="@dimen/space_s"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/image_description"
             android:layout_gravity="center_vertical" />

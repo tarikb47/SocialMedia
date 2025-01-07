@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.hook.common.enums.FieldType
 import com.example.hook.common.exception.FailedToSaveUserException
 import com.example.hook.common.exception.IncorrectPasswordException
+import com.example.hook.common.exception.NoContactFoundException
 import com.example.hook.common.exception.UnexpectedErrorException
 import com.example.hook.common.exception.UnregisteredUserException
 import com.example.hook.common.exception.UserNotLoggedInException
@@ -28,9 +29,12 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.time.Year
 import javax.inject.Inject
 
 class FirebaseAuthDataSource @Inject constructor(
@@ -233,7 +237,7 @@ class FirebaseAuthDataSource @Inject constructor(
                     is Result.Success -> {
                         val document = result.data.documents.firstOrNull()
                         if (document == null) {
-                            Result.Error(UnregisteredUserException())
+                            Result.Error(NoContactFoundException())
                         } else {
                             Result.Success(
                                 Contact(
@@ -270,6 +274,22 @@ class FirebaseAuthDataSource @Inject constructor(
             Result.Success(it)
         } ?: Result.Error(UserNotLoggedInException())
     }
+    fun uploadProfilePicture(uri: Uri): Flow<Result<Unit>> {
+        val userId = auth.currentUser?.uid ?: return flowOf(Result.Error(UserNotLoggedInException()))
+        val storageRef = FirebaseStorage.getInstance().reference
+            .child("userPhotos/$userId/profile.jpg")
+        return storageRef.putFile(uri).asFlow()
+            .flatMapLatest {
+                storageRef.downloadUrl.asFlow()
+            }
+            .mapSuccess { downloadUrl ->
+                firestore.collection(USERS).document(userId).update(PHOTO_URL, downloadUrl.toString()).asFlow()
+            }
+            .mapSuccess { Unit }
+            .mapError { error -> error }
+    }
+
+
 
     companion object {
         private const val USERS = "Users"

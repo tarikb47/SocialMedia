@@ -46,7 +46,6 @@
                 android:id="@+id/activity_status"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Active"
                 android:textSize="@dimen/text_size_body_2"
                 app:layout_constraintStart_toStartOf="@id/username"
                 app:layout_constraintTop_toBottomOf="@id/username"

@@ -13,6 +13,7 @@ import com.example.hook.common.result.Result
 import com.example.hook.data.remote.home.contacts.UserActivityRepository
 import com.example.hook.databinding.ContactContainerBinding
 import com.example.hook.databinding.DropdownContactItemBinding
+import com.example.hook.presentation.authentication.helpers.TimeFormater
 import com.example.hook.presentation.home.contacts.ContactsFragmentDirections
 import com.example.hook.presentation.home.contacts.ContactsViews
 import com.example.hook.presentation.home.contacts.RecyclerViewItem
@@ -29,7 +30,6 @@ class MixedAdapter(
     private val userActivityRepository: UserActivityRepository,
     private val scope: CoroutineScope
 ) : ListAdapter<RecyclerViewItem, RecyclerView.ViewHolder>(ItemDiffCallback()) {
-
     var isMenuVisible = false
 
     fun showMenu() {
@@ -82,6 +82,7 @@ class MixedAdapter(
         private val userActivityRepository: UserActivityRepository,
         private val scope: CoroutineScope
     ) : RecyclerView.ViewHolder(binding.root) {
+        private val timeFormater = TimeFormater()
 
         fun bind(contact: RecyclerViewItem.ContactItem, navController: NavController) {
             binding.contact = contact.contact
@@ -101,7 +102,7 @@ class MixedAdapter(
                             val activityStatus = result.data
                             binding.activityStatus.text = when (activityStatus) {
                                 true -> "Online"
-                                is Timestamp -> "Last active: ${formatTimestamp(activityStatus)}"
+                                is Timestamp -> timeFormater.getRelativeTime(activityStatus.toDate().time)
                                 else -> activityStatus.toString()
                             }
                         }

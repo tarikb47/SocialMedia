@@ -59,5 +59,9 @@
     <dimen name="text_size_image_letter">48dp</dimen>
 
     <!--endregion-->
+    <dimen name="speech_bubble_corners">10dp</dimen>
+    <dimen name="speech_bubble_corners_plus_tail">15dp</dimen>
+    <dimen name="speech_bubble_spacing">5dp</dimen>
+    <dimen name="speech_bubble_tail">25dp</dimen>
 
 </resources>
