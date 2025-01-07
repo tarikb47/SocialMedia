@@ -23,18 +23,12 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import java.time.Year
 import javax.inject.Inject
 
 class FirebaseAuthDataSource @Inject constructor(
@@ -91,21 +85,6 @@ class FirebaseAuthDataSource @Inject constructor(
         )
     }
 
-    fun uploadUserPhoto(userId: String, photoUri: Uri): Flow<Result<String>> {
-        val storageRef = FirebaseStorage.getInstance().reference
-            .child("userPhotos/$userId/profile.jpg")
-
-        return storageRef.putFile(photoUri).asFlow()
-            .flatMapLatest {
-                storageRef.downloadUrl.asFlow()
-            }
-            .mapSuccess { uri -> uri.toString() }
-            .flatMapLatest { photoUrl ->
-                firestore.collection(USERS).document(userId).update(PHOTO_URL, photoUrl).asFlow()
-                    .mapSuccess { photoUrl.toString() }
-            }
-    }
-
     fun saveUserToFirestore(
         username: String?,
         email: String?,
@@ -139,12 +118,14 @@ class FirebaseAuthDataSource @Inject constructor(
                                         val mergedPhoneNumber = existingUser.phoneNumber
                                             ?: currentUser.phoneNumber
                                         val mergedEmail = currentUser.email
+                                        val mergedPhoto = existingUser.photoUrl ?: currentUser.photoUrl.toString()
                                         saveUserToFirestore(
                                             username = mergedUsername,
                                             email = mergedEmail,
                                             phoneNumber = mergedPhoneNumber,
                                             firebaseToken = tokenResult.data,
-                                            userId = currentUser.uid
+                                            userId = currentUser.uid,
+                                            photoUrl = mergedPhoto
                                         ).mapSuccess { Unit }
                                             .mapError { FailedToSaveUserException() }
                                     }
@@ -283,7 +264,7 @@ class FirebaseAuthDataSource @Inject constructor(
                 storageRef.downloadUrl.asFlow()
             }
             .mapSuccess { downloadUrl ->
-                firestore.collection(USERS).document(userId).update(PHOTO_URL, downloadUrl.toString()).asFlow()
+                firestore.collection(USERS).document(userId).update(PHOTO_URL, downloadUrl.encodedPath).asFlow()
             }
             .mapSuccess { Unit }
             .mapError { error -> error }

@@ -27,8 +27,6 @@ class SettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
-
-        // Bind ViewModel to the layout
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 

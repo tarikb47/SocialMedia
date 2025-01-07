@@ -52,6 +52,9 @@
     <string name="edit">Edit</string>
     <string name="logut">Log out</string>
     <string name="write_message">Write a message</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="done">Done</string>
+    <string name="add_photo">Add New Photo</string>
 
 
 
