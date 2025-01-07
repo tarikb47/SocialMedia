@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
    >
 
-<data>
-        <import type="android.view.View" />
-        <variable
-            name="user"
-            type="com.example.hook.data.local.entity.UserEntity" />
-    </data>
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -35,8 +29,8 @@
         app:layout_constraintVertical_chainStyle="packed"
         android:id="@+id/username"
         android:layout_width="0dp"
+        android:textColor="@color/black"
         android:layout_height="wrap_content"
-        android:text="@{user.username}"
         android:textSize="@dimen/text_size_h5"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@id/image_profile"
@@ -48,8 +42,9 @@
         android:id="@+id/last_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Last message preview"
         android:textSize="@dimen/text_size_body_2"
+        android:ellipsize="end"
+        android:maxLines="1"
         app:layout_constraintStart_toStartOf="@id/username"
         app:layout_constraintTop_toBottomOf="@id/username"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -61,7 +56,6 @@
         android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="04:20 AM"
         android:textSize="@dimen/text_size_body_3"
         android:textColor="@android:color/darker_gray"
         android:layout_marginEnd="@dimen/space_m"

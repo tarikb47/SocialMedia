@@ -3,6 +3,7 @@ package com.example.hook.ui.contacts
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.navigation.NavController
+import androidx.navigation.navArgument
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +13,8 @@ import com.example.hook.common.result.Result
 import com.example.hook.data.remote.home.contacts.UserActivityRepository
 import com.example.hook.databinding.ContactContainerBinding
 import com.example.hook.databinding.DropdownContactItemBinding
+import com.example.hook.presentation.authentication.helpers.TimeFormater
+import com.example.hook.presentation.home.contacts.ContactsFragmentDirections
 import com.example.hook.presentation.home.contacts.ContactsViews
 import com.example.hook.presentation.home.contacts.RecyclerViewItem
 import kotlinx.coroutines.flow.collectLatest
@@ -27,7 +30,6 @@ class MixedAdapter(
     private val userActivityRepository: UserActivityRepository,
     private val scope: CoroutineScope
 ) : ListAdapter<RecyclerViewItem, RecyclerView.ViewHolder>(ItemDiffCallback()) {
-
     var isMenuVisible = false
 
     fun showMenu() {
@@ -70,7 +72,7 @@ class MixedAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = getItem(position)) {
-            is RecyclerViewItem.ContactItem -> (holder as ContactViewHolder).bind(item)
+            is RecyclerViewItem.ContactItem -> (holder as ContactViewHolder).bind(item, navController)
             is RecyclerViewItem.MenuItem -> (holder as MenuViewHolder).bind(item, navController)
         }
     }
@@ -80,15 +82,19 @@ class MixedAdapter(
         private val userActivityRepository: UserActivityRepository,
         private val scope: CoroutineScope
     ) : RecyclerView.ViewHolder(binding.root) {
+        private val timeFormater = TimeFormater()
 
-        fun bind(contact: RecyclerViewItem.ContactItem) {
+        fun bind(contact: RecyclerViewItem.ContactItem, navController: NavController) {
             binding.contact = contact.contact
             Glide.with(binding.imageProfile.context)
                 .load(contact.contact.photoUrl)
                 .placeholder(R.drawable.add_new_icon)
                 .circleCrop()
                 .into(binding.imageProfile)
-
+            binding.root.setOnClickListener {
+                val action = ContactsFragmentDirections.actionNavContactsToDirectChat(contact.contact.userId)
+                navController.navigate(action)
+            }
             scope.launch {
                 userActivityRepository.observeUserStatus(contact.contact.userId).collectLatest { result ->
                     when (result) {
@@ -96,7 +102,7 @@ class MixedAdapter(
                             val activityStatus = result.data
                             binding.activityStatus.text = when (activityStatus) {
                                 true -> "Online"
-                                is Timestamp -> "Last active: ${formatTimestamp(activityStatus)}"
+                                is Timestamp -> timeFormater.getRelativeTime(activityStatus.toDate().time)
                                 else -> activityStatus.toString()
                             }
                         }
@@ -123,9 +129,9 @@ class MixedAdapter(
             binding.menuIcon.setImageResource(menuItem.iconResId)
             binding.root.setOnClickListener {
                 when (menuItem.title) {
-                    "Find People Nearby" -> { /* Navigate or handle click */ }
-                    "Invite Friends" -> { /* Navigate or handle click */ }
-                    "Contact Categories" -> { /* Navigate or handle click */ }
+                    "Find People Nearby" -> {  }
+                    "Invite Friends" -> {  }
+                    "Contact Categories" -> {  }
                     "Add New Contact" -> navController.navigate(R.id.action_nav_contacts_to_add_contact)
                 }
             }

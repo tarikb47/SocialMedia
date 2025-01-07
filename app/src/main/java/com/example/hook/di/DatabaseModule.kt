@@ -7,6 +7,7 @@ import com.example.hook.data.local.ContactDatabase
 import com.example.hook.data.local.UserRepositoryImpl
 import com.example.hook.data.local.dao.ContactDao
 import com.example.hook.data.local.dao.UserDao
+import com.example.hook.data.local.entity.UserEntity
 import com.example.hook.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -39,26 +40,22 @@ class DatabaseModule {
     }
 
 
-    @Module
-    @InstallIn(SingletonComponent::class)
-    object DatabaseModule {
-
-        @Provides
-        @Singleton
-        fun provideContactDatabase(appContext: Context): ContactDatabase {
-            return Room.databaseBuilder(
-                appContext,
-                ContactDatabase::class.java,
-                "contact_database"
-            ).build()
-        }
-
-        @Provides
-        @Singleton
-        fun provideContactDao(contactDatabase: ContactDatabase): ContactDao {
-            return contactDatabase.contactDao()
-        }
+    @Provides
+    @Singleton
+    fun provideContactDatabase(appContext: Context): ContactDatabase {
+        return Room.databaseBuilder(
+            appContext,
+            ContactDatabase::class.java,
+            "contact_database"
+        ).build()
     }
+
+    @Provides
+    @Singleton
+    fun provideContactDao(contactDatabase: ContactDatabase): ContactDao {
+        return contactDatabase.contactDao()
+    }
+
 
 
 

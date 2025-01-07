@@ -1,8 +1,10 @@
 package com.example.hook.di
 
+import com.example.hook.data.local.entity.UserEntity
 import com.example.hook.data.remote.authentication.AuthRepositoryImpl
 import com.example.hook.data.remote.authentication.FirebaseAuthDataSource
 import com.example.hook.data.remote.home.contacts.UserActivityRepository
+import com.example.hook.data.remote.home.messages.MessagesRepository
 import com.example.hook.domain.repository.AuthRepository
 import com.example.hook.domain.repository.UserRepository
 import com.example.hook.presentation.home.contacts.MixedAdapterFactory
@@ -53,10 +55,16 @@ class AppModule {
     fun provideMixedAdapterFactory(userActivityRepository : UserActivityRepository) : MixedAdapterFactory{
         return MixedAdapterFactory(userActivityRepository)
     }
+    @Provides
+    @Singleton
+    fun provideMessagesRepository(firestore: FirebaseFirestore, auth: FirebaseAuth) : MessagesRepository {
+        return MessagesRepository(firestore,auth)
+    }
     /* @Provides
      fun provideFacebookLoginUseCase(
          authRepository: AuthRepository
      ): FacebookLoginUseCase = FacebookLoginUseCase(authRepository)
  */
+
 
 }

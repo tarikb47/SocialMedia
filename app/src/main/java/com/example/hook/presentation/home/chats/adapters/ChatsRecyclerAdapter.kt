@@ -2,71 +2,49 @@ package com.example.hook.presentation.home.chats.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.example.hook.data.local.entity.UserEntity
+import com.bumptech.glide.Glide
+import com.example.hook.R
 import com.example.hook.databinding.ChatsContainerBinding
+import com.example.hook.domain.model.Chat
+import com.example.hook.presentation.authentication.helpers.TimeFormater
 
-class ChatsRecyclerAdapter : RecyclerView.Adapter<com.example.hook.presentation.home.chats.ViewHolder>() {
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): com.example.hook.presentation.home.chats.ViewHolder {
-        val binding =
-            ChatsContainerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return com.example.hook.presentation.home.chats.ViewHolder(binding)
-    }
+class ChatsRecyclerAdapter(        private val onChatClicked: (Chat) -> Unit
 
-    override fun onBindViewHolder(
-        holder: com.example.hook.presentation.home.chats.ViewHolder,
-        position: Int
-    ) {
-        val message = messages[position]
-        holder.bind(message)
-    }
+) : RecyclerView.Adapter<ChatsRecyclerAdapter.ChatViewHolder>() {
+    private val timeFormater = TimeFormater()
+    private var chats: List<Chat> = emptyList()
+    inner class ChatViewHolder(private val binding: ChatsContainerBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(chat: Chat) {
+            binding.lastMessage.text = chat.lastMessage
+            binding.time.text =timeFormater.getRelativeTime(chat.timestamp)
+            binding.username.text = chat.username
+            Glide.with(binding.root.context)
+                .load(chat.photoUrl)
+                .circleCrop()
+                .placeholder(R.drawable.add_new_icon)
+                .error(R.drawable.add_new_icon)
+                .into(binding.imageProfile)
+            binding.root.setOnClickListener{
+                onChatClicked(chat)
+            }
+        }
 
-    override fun getItemCount(): Int {
-        return messages.size
+
     }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
+        val binding = ChatsContainerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ChatViewHolder(binding)
+    }
+    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
+        val chat = chats[position]
+        holder.bind(chat)
+    }
+    fun updateChats(updatedChats: List<Chat>) {
+        this.chats = updatedChats
+        notifyDataSetChanged()
+    }
+    override fun getItemCount(): Int = chats.size
 }
-val messages = listOf(
-    UserEntity(
-
-        1,
-        "",
-        "Tarik",
-        "one",
-        phoneNumber = "aa",
-        firebaseToken = "aa",
-        photoUrl = "https://firebasestorage.googleapis.com/v0/b/hook-c47b9.firebasestorage.app/o/default.webp?alt=media&token=e34658b5-e46f-4a1a-85f1-8f57acde4dc8",
-
-    ),
-    UserEntity(
-        2,
-        "",
-        "Tarik",
-        "one",
-        phoneNumber = "aa",
-        firebaseToken = "aa",
-        "https://firebasestorage.googleapis.com/v0/b/hook-c47b9.firebasestorage.app/o/default.webp?alt=media&token=e34658b5-e46f-4a1a-85f1-8f57acde4dc8"
-
-    ),
-    UserEntity(
-        2,
-        "",
-        "Tarik",
-        "one",
-        phoneNumber = "aa",
-        firebaseToken = "aa",
-        "https://firebasestorage.googleapis.com/v0/b/hook-c47b9.firebasestorage.app/o/default.webp?alt=media&token=e34658b5-e46f-4a1a-85f1-8f57acde4dc8"
-
-    ),
-    UserEntity(
-        4,
-        "",
-        "Tarik",
-        "one",
-        phoneNumber = "aa",
-        firebaseToken = "aa",
-        "https://firebasestorage.googleapis.com/v0/b/hook-c47b9.firebasestorage.app/o/default.webp?alt=media&token=e34658b5-e46f-4a1a-85f1-8f57acde4dc8"
-    ))

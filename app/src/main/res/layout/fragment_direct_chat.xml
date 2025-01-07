@@ -1,10 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.home.chats.allchats.chat.DirectChatFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".presentation.home.chats.allchats.chat.DirectChatFragment"
+    >
+    <ImageButton
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/image_profile"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:layout_constraintTop_toTopOf="@id/image_profile"
+        app:layout_constraintBottom_toBottomOf="@id/image_profile"
+        android:layout_marginStart="@dimen/space_s"
+        android:src="@drawable/ic_back"
+        />
+    <ImageView
+        android:id="@+id/image_profile"
+        android:layout_width="@dimen/image_m"
+        android:layout_height="@dimen/image_m"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="@dimen/space_xxxl"
+        android:layout_marginBottom="@dimen/space_m"
+        android:layout_marginStart="@dimen/space_s"
+        app:layout_constraintStart_toEndOf="@id/back"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/username"
+        android:contentDescription="@string/image_description"
+        android:layout_marginEnd="@dimen/space_s"
+        android:background="@drawable/circle_shape_image" />
 
+    <TextView
+        app:layout_constraintVertical_chainStyle="packed"
+        android:id="@+id/username"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_h5"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/image_profile"
+        app:layout_constraintBottom_toTopOf="@id/ativity"
+        app:layout_constraintTop_toTopOf="@id/image_profile"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/ativity"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Last message preview"
+        android:textSize="@dimen/text_size_body_2"
+        app:layout_constraintStart_toStartOf="@id/username"
+        app:layout_constraintTop_toBottomOf="@id/username"
+        />
+
+    <ImageView
+        android:id="@+id/call"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@id/more_options"
+        app:layout_constraintTop_toTopOf="@id/more_options"
+        android:src="@drawable/ic_phone"
+        android:layout_marginEnd="@dimen/space_l"
+
+       />
+    <ImageView
+
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/more_options"
+        android:src="@drawable/ic_dots"
+        android:layout_marginEnd="@dimen/space_l"
+        app:layout_constraintTop_toTopOf="@id/back"
+        app:layout_constraintEnd_toEndOf="parent"
+       />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messages_rv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        android:background="@color/divider_grey"
+        android:layout_marginTop="@dimen/space_xs"
+        app:layout_constraintBottom_toTopOf="@id/message_input_layout"
+        app:layout_constraintTop_toBottomOf="@id/image_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+    <LinearLayout
+        android:id="@+id/message_input_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/white"
+        android:padding="@dimen/space_xxs"
+        android:elevation="@dimen/space_xxxs">
+        <ImageView
+            android:layout_width="@dimen/image_xxs"
+            android:layout_height="@dimen/image_xxs"
+            android:src="@drawable/ic_emojis"
+            android:layout_marginEnd="@dimen/space_xxs"
+            android:layout_gravity="center_vertical"
+            />
+        <EditText
+            android:id="@+id/message_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:layout_weight="1"
+            android:hint="@string/write_message"
+            android:padding="@dimen/space_xs"
+            android:layout_marginEnd="8dp"
+            android:imeOptions="actionDone"
+            android:inputType="textMultiLine"
+            android:maxLines="4"
+            android:textColor="@color/black" />
+
+        <ImageView
+            android:layout_width="@dimen/image_xxs"
+            android:layout_height="@dimen/image_xxs"
+            android:src="@drawable/ic_attach"
+            android:layout_marginEnd="@dimen/space_s"
+            android:layout_gravity="center_vertical"
+            />
+        <ImageButton
+            android:id="@+id/send_button"
+            android:layout_width="@dimen/image_xxs"
+            android:layout_height="@dimen/image_xxs"
+            android:src="@drawable/ic_back"
+            android:layout_marginEnd="@dimen/space_s"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/image_description"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

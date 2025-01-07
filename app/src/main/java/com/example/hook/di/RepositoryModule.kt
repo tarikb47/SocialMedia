@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.hook.data.local.AppDatabase
 import com.example.hook.data.local.UserRepositoryImpl
 import com.example.hook.data.local.dao.UserDao
+import com.example.hook.data.local.entity.UserEntity
 import com.example.hook.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -21,4 +22,5 @@ abstract class RepositoryModule{
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
 }

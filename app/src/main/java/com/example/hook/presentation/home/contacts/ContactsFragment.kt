@@ -27,7 +27,6 @@ class ContactsFragment : Fragment() {
 
     private var _binding: FragmentContactsBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: ContactsViewModel by viewModels()
     private lateinit var layoutManager: LinearLayoutManager
 
@@ -43,7 +42,6 @@ class ContactsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("ChatsFragment", "ChatsFragment is displayed")
         layoutManager = LinearLayoutManager(requireContext())
         adapter = mixedAdapterFactory.create(findNavController(), viewLifecycleOwner.lifecycleScope)
         binding.recyclerView.layoutManager = layoutManager

@@ -19,9 +19,7 @@ class HomeFragmentViewModel @Inject constructor(
 
     fun setUserOnline(){
         viewModelScope.launch {
-            Log.d("Tarik", "launchalo")
             userActivityRepository.userOnline().collectLatest {result->
-                Log.d("Tarik", "Collecting result")
                 when(result){
                     is Result.Error -> Log.d("Tarik", "${result.error}")
                     is Result.Success -> Log.d("Tarik","Online")

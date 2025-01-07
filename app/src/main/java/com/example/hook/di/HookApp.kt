@@ -18,5 +18,6 @@ class HookApp : Application (){
                 Timber.plant(Timber.DebugTree())
 
         }
+
     }
 }
